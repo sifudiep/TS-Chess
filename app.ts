@@ -1,3 +1,6 @@
+import { Piece } from "./classes/Piece.js";
+import { Coordinate } from "./classes/Coordinate.js";
+
 function setupBoardColors() {
     var board = document.getElementById('chessBoard');
     if (board == null) throw Error;
@@ -23,32 +26,9 @@ function initGame() {
 
 var Board : Piece[][] | undefined[][] = [[],[],[],[],[],[],[],[]] 
 
-class Coordinate {
-    constructor(x:number, y:number) {
-        this.X = x;
-        this.Y = y;
-    }
-    X : number;
-    Y : number;
-}
-
 var theLegend;
 var desti = new Coordinate(0,4);
 let lastTouchedPiece : Piece;
-
-class Piece {
-    constructor(IsWhite : boolean, CurrentPosition : Coordinate, Name : String) {
-        this.IsWhite = IsWhite;
-        this.CurrentPosition = CurrentPosition;
-        this.Name = Name
-    }
-    
-    IsWhite : boolean;
-    HasBeenMoved : boolean = false;
-    LegalMoves : Array<Coordinate> = [];
-    CurrentPosition : Coordinate;
-    Name : String;
-}
 
 function moveLikePawn(self : Piece) {
     return {
@@ -214,7 +194,7 @@ function unhighlightLegalMoves(piece : Piece) {
 function makePieceDraggable() {
     document.addEventListener("dragstart", (e : DragEvent) => {
         var colIndex = parseInt(e.path[1].id.replace("col-", "")) - 1;
-        var rowIndex = parseInt(e.path[1].getAttribute("row")) - 1;
+        var rowIndex = parseInt(e.path[1].getAttribute("row")!) - 1;
 
         var piece : Piece | undefined = Board[colIndex][rowIndex];
         if (piece == undefined) return;
@@ -230,7 +210,7 @@ function makePieceDraggable() {
 
     document.addEventListener("dragend", (e) => {
         var colIndex = parseInt(e.path[1].id.replace("col-", "")) - 1;
-        var rowIndex = parseInt(e.path[1].getAttribute("row")) - 1;
+        var rowIndex = parseInt(e.path[1].getAttribute("row")!) - 1;
 
         var piece : Piece | undefined = Board[colIndex][rowIndex];        
         if (piece == undefined) return;

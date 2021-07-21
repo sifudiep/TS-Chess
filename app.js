@@ -1,14 +1,5 @@
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign.apply(this, arguments);
-};
+import { Piece } from "./classes/Piece.js";
+import { Coordinate } from "./classes/Coordinate.js";
 function setupBoardColors() {
     var board = document.getElementById('chessBoard');
     if (board == null)
@@ -31,29 +22,12 @@ function initGame() {
     makeCellsLandable();
 }
 var Board = [[], [], [], [], [], [], [], []];
-var Coordinate = /** @class */ (function () {
-    function Coordinate(x, y) {
-        this.X = x;
-        this.Y = y;
-    }
-    return Coordinate;
-}());
 var theLegend;
 var desti = new Coordinate(0, 4);
-var lastTouchedPiece;
-var Piece = /** @class */ (function () {
-    function Piece(IsWhite, CurrentPosition, Name) {
-        this.HasBeenMoved = false;
-        this.LegalMoves = [];
-        this.IsWhite = IsWhite;
-        this.CurrentPosition = CurrentPosition;
-        this.Name = Name;
-    }
-    return Piece;
-}());
+let lastTouchedPiece;
 function moveLikePawn(self) {
     return {
-        addLegalPawnMoves: function () {
+        addLegalPawnMoves: () => {
             if (self.IsWhite) {
                 // if (Board[self.CurrentPosition.X-1][self.CurrentPosition.Y+1] !== undefined) {
                 //     if (Board[self.CurrentPosition.X-1][self.CurrentPosition.Y+1].IsWhite === false){
@@ -101,7 +75,7 @@ function moveLikePawn(self) {
 // }
 function pawnCreator(IsWhite, CurrentPosition) {
     var piece = new Piece(IsWhite, CurrentPosition, "Pawn");
-    var pawnObject = __assign(__assign({}, piece), moveLikePawn(piece));
+    var pawnObject = Object.assign(Object.assign({}, piece), moveLikePawn(piece));
     pawnObject.addLegalPawnMoves();
     Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = pawnObject;
     theLegend = pawnObject;
@@ -111,7 +85,7 @@ function drawBoard() {
         for (var col = 0; col < 8; col++) {
             var logicalCell = Board[col][row];
             if (logicalCell !== undefined) {
-                var rowElement = document.getElementById("row-" + (row + 1));
+                const rowElement = document.getElementById(`row-${row + 1}`);
                 if (rowElement == null)
                     throw Error;
                 var visualCell = rowElement.children[col];
@@ -119,7 +93,7 @@ function drawBoard() {
                     var visualCellImage = document.createElement("img");
                     var color = logicalCell.IsWhite ? "light" : "dark";
                     var pieceName = logicalCell.Name.toLowerCase();
-                    visualCellImage.setAttribute("src", "./pieces/" + color + "-" + pieceName + ".svg");
+                    visualCellImage.setAttribute("src", `./pieces/${color}-${pieceName}.svg`);
                     visualCellImage.setAttribute("class", "piece");
                     visualCell.appendChild(visualCellImage);
                 }
@@ -131,7 +105,7 @@ function getLogicalCell(coordinate) {
     return Board[coordinate.X][coordinate.Y];
 }
 function getVisualCell(coordinate) {
-    var rowElement = document.getElementById("row-" + (coordinate.Y + 1));
+    const rowElement = document.getElementById(`row-${coordinate.Y + 1}`);
     if (rowElement != null)
         return rowElement.children[coordinate.X];
     else
@@ -156,7 +130,7 @@ function drawVisualCell(piece) {
     while (visualCell.firstElementChild != null)
         visualCell.removeChild(visualCell.firstElementChild);
     var visualCellImage = document.createElement("img");
-    visualCellImage.setAttribute("src", "./pieces/" + (logicalCell.IsWhite ? "light" : "dark") + "-" + logicalCell.Name.toLowerCase() + ".svg");
+    visualCellImage.setAttribute("src", `./pieces/${logicalCell.IsWhite ? "light" : "dark"}-${logicalCell.Name.toLowerCase()}.svg`);
     visualCellImage.setAttribute("class", "piece");
     visualCell.appendChild(visualCellImage);
 }
@@ -167,7 +141,7 @@ function movePiece(piece, destination) {
 }
 function updateLegalMoves(piece) {
     piece.LegalMoves = [];
-    piece.addLegalPawnMoves();
+    // använd addLegalPawnMoves() på ngt sätt....
 }
 function highlightLegalMoves(piece) {
     for (var i = 0; i < piece.LegalMoves.length; i++) {
@@ -182,7 +156,7 @@ function unhighlightLegalMoves(piece) {
     }
 }
 function makePieceDraggable() {
-    document.addEventListener("dragstart", function (e) {
+    document.addEventListener("dragstart", (e) => {
         var colIndex = parseInt(e.path[1].id.replace("col-", "")) - 1;
         var rowIndex = parseInt(e.path[1].getAttribute("row")) - 1;
         var piece = Board[colIndex][rowIndex];
@@ -194,7 +168,7 @@ function makePieceDraggable() {
     //     // document.addEventListener("drag", (e) => {
     //     //     console.log("drag middle!");
     //     // });
-    document.addEventListener("dragend", function (e) {
+    document.addEventListener("dragend", (e) => {
         var colIndex = parseInt(e.path[1].id.replace("col-", "")) - 1;
         var rowIndex = parseInt(e.path[1].getAttribute("row")) - 1;
         var piece = Board[colIndex][rowIndex];
@@ -215,9 +189,9 @@ function makeCellsLandable() {
             return false;
         console.log(e);
         if (e.target.className.includes("legalMove")) {
-            var dropCoordinate = getCoordinateFromElement(e.target);
+            let dropCoordinate = getCoordinateFromElement(e.target);
             console.log(lastTouchedPiece);
-            console.log("dropCoordinate, X:" + dropCoordinate.X + ", Y:" + dropCoordinate.Y);
+            console.log(`dropCoordinate, X:${dropCoordinate.X}, Y:${dropCoordinate.Y}`);
             movePiece(lastTouchedPiece, dropCoordinate);
             unhighlightLegalMoves(lastTouchedPiece);
             updateLegalMoves(lastTouchedPiece);
@@ -225,7 +199,7 @@ function makeCellsLandable() {
     });
 }
 function getCoordinateFromElement(element) {
-    var cellDiv;
+    let cellDiv;
     if (element.nodeName === "DIV") {
         cellDiv = element;
     }
@@ -235,9 +209,9 @@ function getCoordinateFromElement(element) {
     else {
         throw Error;
     }
-    var rowIndex = parseInt(cellDiv.getAttribute("row")) - 1;
-    var colIndex = parseInt(cellDiv.id.replace("col-", "")) - 1;
-    console.log("colIndex: " + colIndex + ", rowIndex: " + rowIndex);
+    const rowIndex = parseInt(cellDiv.getAttribute("row")) - 1;
+    const colIndex = parseInt(cellDiv.id.replace("col-", "")) - 1;
+    console.log(`colIndex: ${colIndex}, rowIndex: ${rowIndex}`);
     return new Coordinate(colIndex, rowIndex);
 }
 initGame();
