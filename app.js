@@ -11,6 +11,8 @@ var __assign = (this && this.__assign) || function () {
 };
 function setupBoardColors() {
     var board = document.getElementById('chessBoard');
+    if (board == null)
+        throw Error;
     var lightColor = true;
     for (var i = 0; i < board.children.length; i++) {
         var row = board.children[i];
@@ -38,6 +40,7 @@ var Coordinate = /** @class */ (function () {
 }());
 var theLegend;
 var desti = new Coordinate(0, 4);
+var lastTouchedPiece;
 var Piece = /** @class */ (function () {
     function Piece(IsWhite, CurrentPosition, Name) {
         this.HasBeenMoved = false;
@@ -108,8 +111,10 @@ function drawBoard() {
         for (var col = 0; col < 8; col++) {
             var logicalCell = Board[col][row];
             if (logicalCell !== undefined) {
-                console.log("defined found at " + row + "-" + col);
-                var visualCell = document.getElementById("row-" + (row + 1)).children[col];
+                var rowElement = document.getElementById("row-" + (row + 1));
+                if (rowElement == null)
+                    throw Error;
+                var visualCell = rowElement.children[col];
                 if (visualCell.children.length === 0) {
                     var visualCellImage = document.createElement("img");
                     var color = logicalCell.IsWhite ? "light" : "dark";
@@ -126,23 +131,29 @@ function getLogicalCell(coordinate) {
     return Board[coordinate.X][coordinate.Y];
 }
 function getVisualCell(coordinate) {
-    return document.getElementById("row-" + (coordinate.Y + 1)).children[coordinate.X];
+    var rowElement = document.getElementById("row-" + (coordinate.Y + 1));
+    if (rowElement != null)
+        return rowElement.children[coordinate.X];
+    else
+        throw Error;
 }
 function removeVisualCell(cellCoordinate) {
     var visualCell = getVisualCell(cellCoordinate);
-    if (visualCell.children.length != 0) {
+    if (visualCell.firstElementChild != null) {
         visualCell.removeChild(visualCell.firstElementChild);
     }
 }
-function updateCell(piece, destination) {
+function updatePiecePosition(piece, destination) {
     Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = undefined;
     piece.CurrentPosition = destination;
     Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
 }
-function drawVisualCell(cellCoordinate) {
-    var visualCell = getVisualCell(cellCoordinate);
-    var logicalCell = getLogicalCell(cellCoordinate);
-    while (visualCell.children.length != 0)
+function drawVisualCell(piece) {
+    var visualCell = getVisualCell(piece.CurrentPosition);
+    var logicalCell = getLogicalCell(piece.CurrentPosition);
+    if (logicalCell == undefined)
+        throw Error;
+    while (visualCell.firstElementChild != null)
         visualCell.removeChild(visualCell.firstElementChild);
     var visualCellImage = document.createElement("img");
     visualCellImage.setAttribute("src", "./pieces/" + (logicalCell.IsWhite ? "light" : "dark") + "-" + logicalCell.Name.toLowerCase() + ".svg");
@@ -151,8 +162,12 @@ function drawVisualCell(cellCoordinate) {
 }
 function movePiece(piece, destination) {
     removeVisualCell(piece.CurrentPosition);
-    updateCell(piece, destination);
-    drawVisualCell(piece.CurrentPosition);
+    updatePiecePosition(piece, destination);
+    drawVisualCell(piece);
+}
+function updateLegalMoves(piece) {
+    piece.LegalMoves = [];
+    piece.addLegalPawnMoves();
 }
 function highlightLegalMoves(piece) {
     for (var i = 0; i < piece.LegalMoves.length; i++) {
@@ -168,35 +183,61 @@ function unhighlightLegalMoves(piece) {
 }
 function makePieceDraggable() {
     document.addEventListener("dragstart", function (e) {
-        console.log("drag start!");
         var colIndex = parseInt(e.path[1].id.replace("col-", "")) - 1;
         var rowIndex = parseInt(e.path[1].getAttribute("row")) - 1;
         var piece = Board[colIndex][rowIndex];
+        if (piece == undefined)
+            return;
         highlightLegalMoves(piece);
+        lastTouchedPiece = piece;
     });
-    // document.addEventListener("drag", (e) => {
-    //     console.log("drag middle!");
-    // });
+    //     // document.addEventListener("drag", (e) => {
+    //     //     console.log("drag middle!");
+    //     // });
     document.addEventListener("dragend", function (e) {
-        console.log("drag end!");
-        console.log(e);
         var colIndex = parseInt(e.path[1].id.replace("col-", "")) - 1;
         var rowIndex = parseInt(e.path[1].getAttribute("row")) - 1;
         var piece = Board[colIndex][rowIndex];
-        console.log(piece);
+        if (piece == undefined)
+            return;
         unhighlightLegalMoves(piece);
     });
 }
 function makeCellsLandable() {
-    document.addEventListener("dragenter", function (e) {
-    });
-    // By default, data/elements cannot be dropped in other elements. To allow a drop, we must prevent the default handling of the element
+    //   // By default, data/elements cannot be dropped in other elements. To allow a drop, we must prevent the default handling of the element
     document.addEventListener("dragover", function (e) {
         e.preventDefault();
     });
-    // When the draggable p element leaves the droptarget, reset the DIVS's border style
-    document.addEventListener("dragleave", function (e) {
-        console.log("dragleave!");
+    // two different depending if target is an image or target is the div parent...
+    document.addEventListener("drop", function (e) {
+        e.preventDefault();
+        if (!e)
+            return false;
+        console.log(e);
+        if (e.target.className.includes("legalMove")) {
+            var dropCoordinate = getCoordinateFromElement(e.target);
+            console.log(lastTouchedPiece);
+            console.log("dropCoordinate, X:" + dropCoordinate.X + ", Y:" + dropCoordinate.Y);
+            movePiece(lastTouchedPiece, dropCoordinate);
+            unhighlightLegalMoves(lastTouchedPiece);
+            updateLegalMoves(lastTouchedPiece);
+        }
     });
+}
+function getCoordinateFromElement(element) {
+    var cellDiv;
+    if (element.nodeName === "DIV") {
+        cellDiv = element;
+    }
+    else if (element.nodeName === "IMG") {
+        cellDiv = element.parentElement;
+    }
+    else {
+        throw Error;
+    }
+    var rowIndex = parseInt(cellDiv.getAttribute("row")) - 1;
+    var colIndex = parseInt(cellDiv.id.replace("col-", "")) - 1;
+    console.log("colIndex: " + colIndex + ", rowIndex: " + rowIndex);
+    return new Coordinate(colIndex, rowIndex);
 }
 initGame();
