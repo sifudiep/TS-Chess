@@ -18,34 +18,34 @@ body {
     grid-template-columns: repeat(8, 80px);
 }
 
-.cell {
-    background-color: burlywood;    
-}
-
 .light-cell {
     background-color: burlywood;
+    user-drag: none; 
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-drag: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
 }
 
 .dark-cell {
     background-color: grey;
+    user-drag: none; 
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-drag: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
 }
 
 .legalMove {
-    background-color: green;
+    background-color: rgb(138, 214, 138);
 }
 
-.piece {
-    width: 80px;
-    height: 80px;
-    margin: 0;
-    padding: 0;
-    align-content: center;    
-}
-
-.pawn {
+.piece-background {
     background-image: url("");
     background-repeat: no-repeat;
-    width: 80px;
-    height: 80px;
     background-size: 80px;
+    height: 80px;
+    width: 80px;
 }

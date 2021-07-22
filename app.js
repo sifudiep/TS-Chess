@@ -8,7 +8,7 @@ function setupBoardColors() {
     for (let i = 0; i < board.children.length; i++) {
         let row = board.children[i];
         for (let j = 0; j < row.children.length; j++) {
-            lightColor ? row.children[j].className += ' ligth-cell' : row.children[j].className += ' dark-cell';
+            lightColor ? row.children[j].className += ' light-cell' : row.children[j].className += ' dark-cell';
             lightColor ? lightColor = false : lightColor = true;
         }
         lightColor ? lightColor = false : lightColor = true;
@@ -218,12 +218,7 @@ function drawBoard() {
                     throw Error;
                 let visualCell = rowElement.children[col];
                 if (visualCell.children.length === 0) {
-                    let visualCellImage = document.createElement("img");
-                    let color = logicalCell.IsWhite ? "light" : "dark";
-                    let pieceName = logicalCell.Name.toLowerCase();
-                    visualCellImage.setAttribute("src", `./pieces/${color}-${pieceName}.svg`);
-                    visualCellImage.setAttribute("class", "piece");
-                    visualCell.appendChild(visualCellImage);
+                    drawVisualCell(logicalCell);
                 }
             }
         }
@@ -258,10 +253,11 @@ function drawVisualCell(piece) {
         throw Error;
     while (visualCell.firstElementChild != null)
         visualCell.removeChild(visualCell.firstElementChild);
-    let visualCellImage = document.createElement("img");
-    visualCellImage.setAttribute("src", `./pieces/${logicalCell.IsWhite ? "light" : "dark"}-${logicalCell.Name.toLowerCase()}.svg`);
-    visualCellImage.setAttribute("class", "piece");
-    visualCell.appendChild(visualCellImage);
+    let visualCellImgBackground = document.createElement("div");
+    visualCellImgBackground.setAttribute("style", `background-image: url("./pieces/${logicalCell.IsWhite ? "light" : "dark"}-${logicalCell.Name.toLowerCase()}.svg")`);
+    visualCellImgBackground.setAttribute("class", " piece-background");
+    visualCellImgBackground.setAttribute("draggable", "true");
+    visualCell.appendChild(visualCellImgBackground);
 }
 function movePiece(piece, destination) {
     let formerCoordinates = piece.CurrentPosition;
@@ -347,4 +343,5 @@ function getCoordinateFromElement(element) {
     const colIndex = parseInt(cellDiv.id.replace("col-", "")) - 1;
     return new Coordinate(colIndex, rowIndex);
 }
+// Change draggable...
 initGame();
