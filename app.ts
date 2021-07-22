@@ -23,54 +23,55 @@ let lastTouchedPiece : Piece;
 
 function initGame() {
     setupBoardColors();
-    pawnCreator(false, new Coordinate(3,3));
+    pawnCreator(true, new Coordinate(5,6));
     rookCreator(true, new Coordinate(7,0));
+    bishopCreator(true, new Coordinate(2,3));
     drawBoard();
     makePieceDraggable();
     makeCellsLandable();
 }
 
 
-function moveLikePawn(piece : Piece) {
-    if (piece.IsWhite) {
-        if (Board[piece.CurrentPosition.X-1][piece.CurrentPosition.Y+1] !== undefined) {
-            if (Board[piece.CurrentPosition.X-1][piece.CurrentPosition.Y+1]?.IsWhite === false){
-                piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X-1, piece.CurrentPosition.Y+1));
+function moveLikePawn(self : Piece) {
+    if (self.IsWhite) {
+        if (Board[self.CurrentPosition.X-1][self.CurrentPosition.Y+1] !== undefined) {
+            if (Board[self.CurrentPosition.X-1][self.CurrentPosition.Y+1]?.IsWhite === false){
+                self.LegalMoves.push(new Coordinate(self.CurrentPosition.X-1, self.CurrentPosition.Y+1));
             }
         }
 
-        if (Board[piece.CurrentPosition.X+1][piece.CurrentPosition.Y+1] !== undefined) {
-            if (Board[piece.CurrentPosition.X+1][piece.CurrentPosition.Y+1]?.IsWhite === false){
-                piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X-1, piece.CurrentPosition.Y+1));
+        if (Board[self.CurrentPosition.X+1][self.CurrentPosition.Y+1] !== undefined) {
+            if (Board[self.CurrentPosition.X+1][self.CurrentPosition.Y+1]?.IsWhite === false){
+                self.LegalMoves.push(new Coordinate(self.CurrentPosition.X-1, self.CurrentPosition.Y+1));
             }
         }
         
-        if (Board[piece.CurrentPosition.X][piece.CurrentPosition.Y + 1] === undefined) {
-            piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X, piece.CurrentPosition.Y+1));
+        if (Board[self.CurrentPosition.X][self.CurrentPosition.Y + 1] === undefined) {
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X, self.CurrentPosition.Y+1));
 
-            if (Board[piece.CurrentPosition.X][piece.CurrentPosition.Y + 2] === undefined && piece.HasBeenMoved === false) {
-                piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X, piece.CurrentPosition.Y+2));
+            if (Board[self.CurrentPosition.X][self.CurrentPosition.Y + 2] === undefined && self.HasBeenMoved === false) {
+                self.LegalMoves.push(new Coordinate(self.CurrentPosition.X, self.CurrentPosition.Y+2));
             }
         }
         
     } else {
-        if (Board[piece.CurrentPosition.X-1][piece.CurrentPosition.Y-1] !== undefined) {
-            if (Board[piece.CurrentPosition.X-1][piece.CurrentPosition.Y-1] ?.IsWhite === true){
-                piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X-1, piece.CurrentPosition.Y-1));
+        if (Board[self.CurrentPosition.X-1][self.CurrentPosition.Y-1] !== undefined) {
+            if (Board[self.CurrentPosition.X-1][self.CurrentPosition.Y-1] ?.IsWhite === true){
+                self.LegalMoves.push(new Coordinate(self.CurrentPosition.X-1, self.CurrentPosition.Y-1));
             }
         }
 
-        if (Board[piece.CurrentPosition.X+1][piece.CurrentPosition.Y-1] !== undefined) {
-            if (Board[piece.CurrentPosition.X+1][piece.CurrentPosition.Y-1]?.IsWhite === true){
-                piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X+1, piece.CurrentPosition.Y-1));
+        if (Board[self.CurrentPosition.X+1][self.CurrentPosition.Y-1] !== undefined) {
+            if (Board[self.CurrentPosition.X+1][self.CurrentPosition.Y-1]?.IsWhite === true){
+                self.LegalMoves.push(new Coordinate(self.CurrentPosition.X+1, self.CurrentPosition.Y-1));
             }
         }
 
-        if (Board[piece.CurrentPosition.X][piece.CurrentPosition.Y - 1] === undefined) {
-            piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X, piece.CurrentPosition.Y-1));
+        if (Board[self.CurrentPosition.X][self.CurrentPosition.Y - 1] === undefined) {
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X, self.CurrentPosition.Y-1));
 
-            if (Board[piece.CurrentPosition.X][piece.CurrentPosition.Y - 2] === undefined && piece.HasBeenMoved === false) {
-                piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X, piece.CurrentPosition.Y-2));
+            if (Board[self.CurrentPosition.X][self.CurrentPosition.Y - 2] === undefined && self.HasBeenMoved === false) {
+                self.LegalMoves.push(new Coordinate(self.CurrentPosition.X, self.CurrentPosition.Y-2));
             }
         } 
     } 
@@ -100,7 +101,6 @@ function moveLikeRook(self : Piece) {
         }
     } 
     
-    // Y-AXIS, DOESNT DETECT OTHER PIECES!
     for (let i = self.CurrentPosition.Y - 1; i >= 0; i--) {
         if (Board[self.CurrentPosition.X][i]?.IsWhite !== self.IsWhite) {
             self.LegalMoves.push(new Coordinate(self.CurrentPosition.X, i));
@@ -124,6 +124,53 @@ function moveLikeRook(self : Piece) {
     } 
 }
 
+function moveLikeBishop(self : Piece) {
+    for (let i = 1; self.CurrentPosition.X + i <= 7 && self.CurrentPosition.Y + i <= 7; i++) {
+        if (Board[self.CurrentPosition.X+i][self.CurrentPosition.Y+i]?.IsWhite !== self.IsWhite) {
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X+i, self.CurrentPosition.Y+i));
+            if (Board[self.CurrentPosition.X+i][self.CurrentPosition.Y+i] !== undefined) {
+                break;
+            }
+        } else {
+            break;
+        }
+    }
+
+    for (let i = 1; self.CurrentPosition.X - i >= 0 && self.CurrentPosition.Y + i <= 7; i++) {
+        if (Board[self.CurrentPosition.X-i][self.CurrentPosition.Y+i]?.IsWhite !== self.IsWhite) {
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X-i, self.CurrentPosition.Y+i));
+            if (Board[self.CurrentPosition.X-i][self.CurrentPosition.Y+i] !== undefined) {
+                break;
+            }
+        } else {
+            break;
+        }
+    }
+
+    for (let i = 1; self.CurrentPosition.X + i <= 7 && self.CurrentPosition.Y - i >= 0; i++) {
+        if (Board[self.CurrentPosition.X + i][self.CurrentPosition.Y - i]?.IsWhite !== self.IsWhite) {
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X + i, self.CurrentPosition.Y - i));
+            if (Board[self.CurrentPosition.X+i][self.CurrentPosition.Y-i] !== undefined) {
+                break;
+            }
+        } else {
+            break;
+        }
+    }
+
+    for (let i = 1; self.CurrentPosition.X - i >= 0 && self.CurrentPosition.Y - i >= 0; i++) {
+        if (Board[self.CurrentPosition.X - i][self.CurrentPosition.Y - i]?.IsWhite !== self.IsWhite) {
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X - i, self.CurrentPosition.Y - i));
+            if (Board[self.CurrentPosition.X - i][self.CurrentPosition.Y-i] !== undefined) {
+                break;
+            }
+        } else {
+            break;
+        }
+    }
+
+}
+
 function pawnCreator(isWhite : boolean, currentPosition : Coordinate) {
     let piece = new Piece(isWhite, currentPosition, "Pawn");
 
@@ -138,6 +185,15 @@ function rookCreator(isWhite : boolean, currentPosition : Coordinate) {
     piece.Moves[0](piece);
     Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
 }
+
+function bishopCreator(isWhite: boolean, currentPosition : Coordinate) {
+    let piece = new Piece(isWhite, currentPosition, "Bishop");
+
+    piece.Moves.push(moveLikeBishop);
+    piece.Moves[0](piece);
+    Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
+}
+
 
 
 function drawBoard() {    

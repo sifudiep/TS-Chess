@@ -18,47 +18,48 @@ var Board = [[], [], [], [], [], [], [], []];
 let lastTouchedPiece;
 function initGame() {
     setupBoardColors();
-    pawnCreator(false, new Coordinate(3, 3));
+    pawnCreator(true, new Coordinate(5, 6));
     rookCreator(true, new Coordinate(7, 0));
+    bishopCreator(true, new Coordinate(2, 3));
     drawBoard();
     makePieceDraggable();
     makeCellsLandable();
 }
-function moveLikePawn(piece) {
+function moveLikePawn(self) {
     var _a, _b, _c, _d;
-    if (piece.IsWhite) {
-        if (Board[piece.CurrentPosition.X - 1][piece.CurrentPosition.Y + 1] !== undefined) {
-            if (((_a = Board[piece.CurrentPosition.X - 1][piece.CurrentPosition.Y + 1]) === null || _a === void 0 ? void 0 : _a.IsWhite) === false) {
-                piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X - 1, piece.CurrentPosition.Y + 1));
+    if (self.IsWhite) {
+        if (Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y + 1] !== undefined) {
+            if (((_a = Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y + 1]) === null || _a === void 0 ? void 0 : _a.IsWhite) === false) {
+                self.LegalMoves.push(new Coordinate(self.CurrentPosition.X - 1, self.CurrentPosition.Y + 1));
             }
         }
-        if (Board[piece.CurrentPosition.X + 1][piece.CurrentPosition.Y + 1] !== undefined) {
-            if (((_b = Board[piece.CurrentPosition.X + 1][piece.CurrentPosition.Y + 1]) === null || _b === void 0 ? void 0 : _b.IsWhite) === false) {
-                piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X - 1, piece.CurrentPosition.Y + 1));
+        if (Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y + 1] !== undefined) {
+            if (((_b = Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y + 1]) === null || _b === void 0 ? void 0 : _b.IsWhite) === false) {
+                self.LegalMoves.push(new Coordinate(self.CurrentPosition.X - 1, self.CurrentPosition.Y + 1));
             }
         }
-        if (Board[piece.CurrentPosition.X][piece.CurrentPosition.Y + 1] === undefined) {
-            piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X, piece.CurrentPosition.Y + 1));
-            if (Board[piece.CurrentPosition.X][piece.CurrentPosition.Y + 2] === undefined && piece.HasBeenMoved === false) {
-                piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X, piece.CurrentPosition.Y + 2));
+        if (Board[self.CurrentPosition.X][self.CurrentPosition.Y + 1] === undefined) {
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X, self.CurrentPosition.Y + 1));
+            if (Board[self.CurrentPosition.X][self.CurrentPosition.Y + 2] === undefined && self.HasBeenMoved === false) {
+                self.LegalMoves.push(new Coordinate(self.CurrentPosition.X, self.CurrentPosition.Y + 2));
             }
         }
     }
     else {
-        if (Board[piece.CurrentPosition.X - 1][piece.CurrentPosition.Y - 1] !== undefined) {
-            if (((_c = Board[piece.CurrentPosition.X - 1][piece.CurrentPosition.Y - 1]) === null || _c === void 0 ? void 0 : _c.IsWhite) === true) {
-                piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X - 1, piece.CurrentPosition.Y - 1));
+        if (Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y - 1] !== undefined) {
+            if (((_c = Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y - 1]) === null || _c === void 0 ? void 0 : _c.IsWhite) === true) {
+                self.LegalMoves.push(new Coordinate(self.CurrentPosition.X - 1, self.CurrentPosition.Y - 1));
             }
         }
-        if (Board[piece.CurrentPosition.X + 1][piece.CurrentPosition.Y - 1] !== undefined) {
-            if (((_d = Board[piece.CurrentPosition.X + 1][piece.CurrentPosition.Y - 1]) === null || _d === void 0 ? void 0 : _d.IsWhite) === true) {
-                piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X + 1, piece.CurrentPosition.Y - 1));
+        if (Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y - 1] !== undefined) {
+            if (((_d = Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y - 1]) === null || _d === void 0 ? void 0 : _d.IsWhite) === true) {
+                self.LegalMoves.push(new Coordinate(self.CurrentPosition.X + 1, self.CurrentPosition.Y - 1));
             }
         }
-        if (Board[piece.CurrentPosition.X][piece.CurrentPosition.Y - 1] === undefined) {
-            piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X, piece.CurrentPosition.Y - 1));
-            if (Board[piece.CurrentPosition.X][piece.CurrentPosition.Y - 2] === undefined && piece.HasBeenMoved === false) {
-                piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X, piece.CurrentPosition.Y - 2));
+        if (Board[self.CurrentPosition.X][self.CurrentPosition.Y - 1] === undefined) {
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X, self.CurrentPosition.Y - 1));
+            if (Board[self.CurrentPosition.X][self.CurrentPosition.Y - 2] === undefined && self.HasBeenMoved === false) {
+                self.LegalMoves.push(new Coordinate(self.CurrentPosition.X, self.CurrentPosition.Y - 2));
             }
         }
     }
@@ -87,7 +88,6 @@ function moveLikeRook(self) {
             break;
         }
     }
-    // Y-AXIS, DOESNT DETECT OTHER PIECES!
     for (let i = self.CurrentPosition.Y - 1; i >= 0; i--) {
         if (((_c = Board[self.CurrentPosition.X][i]) === null || _c === void 0 ? void 0 : _c.IsWhite) !== self.IsWhite) {
             self.LegalMoves.push(new Coordinate(self.CurrentPosition.X, i));
@@ -111,6 +111,53 @@ function moveLikeRook(self) {
         }
     }
 }
+function moveLikeBishop(self) {
+    var _a, _b, _c, _d;
+    for (let i = 1; self.CurrentPosition.X + i <= 7 && self.CurrentPosition.Y + i <= 7; i++) {
+        if (((_a = Board[self.CurrentPosition.X + i][self.CurrentPosition.Y + i]) === null || _a === void 0 ? void 0 : _a.IsWhite) !== self.IsWhite) {
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X + i, self.CurrentPosition.Y + i));
+            if (Board[self.CurrentPosition.X + i][self.CurrentPosition.Y + i] !== undefined) {
+                break;
+            }
+        }
+        else {
+            break;
+        }
+    }
+    for (let i = 1; self.CurrentPosition.X - i >= 0 && self.CurrentPosition.Y + i <= 7; i++) {
+        if (((_b = Board[self.CurrentPosition.X - i][self.CurrentPosition.Y + i]) === null || _b === void 0 ? void 0 : _b.IsWhite) !== self.IsWhite) {
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X - i, self.CurrentPosition.Y + i));
+            if (Board[self.CurrentPosition.X - i][self.CurrentPosition.Y + i] !== undefined) {
+                break;
+            }
+        }
+        else {
+            break;
+        }
+    }
+    for (let i = 1; self.CurrentPosition.X + i <= 7 && self.CurrentPosition.Y - i >= 0; i++) {
+        if (((_c = Board[self.CurrentPosition.X + i][self.CurrentPosition.Y - i]) === null || _c === void 0 ? void 0 : _c.IsWhite) !== self.IsWhite) {
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X + i, self.CurrentPosition.Y - i));
+            if (Board[self.CurrentPosition.X + i][self.CurrentPosition.Y - i] !== undefined) {
+                break;
+            }
+        }
+        else {
+            break;
+        }
+    }
+    for (let i = 1; self.CurrentPosition.X - i >= 0 && self.CurrentPosition.Y - i >= 0; i++) {
+        if (((_d = Board[self.CurrentPosition.X - i][self.CurrentPosition.Y - i]) === null || _d === void 0 ? void 0 : _d.IsWhite) !== self.IsWhite) {
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X - i, self.CurrentPosition.Y - i));
+            if (Board[self.CurrentPosition.X - i][self.CurrentPosition.Y - i] !== undefined) {
+                break;
+            }
+        }
+        else {
+            break;
+        }
+    }
+}
 function pawnCreator(isWhite, currentPosition) {
     let piece = new Piece(isWhite, currentPosition, "Pawn");
     piece.Moves.push(moveLikePawn);
@@ -120,6 +167,12 @@ function pawnCreator(isWhite, currentPosition) {
 function rookCreator(isWhite, currentPosition) {
     let piece = new Piece(isWhite, currentPosition, "Rook");
     piece.Moves.push(moveLikeRook);
+    piece.Moves[0](piece);
+    Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
+}
+function bishopCreator(isWhite, currentPosition) {
+    let piece = new Piece(isWhite, currentPosition, "Bishop");
+    piece.Moves.push(moveLikeBishop);
     piece.Moves[0](piece);
     Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
 }
