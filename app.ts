@@ -16,6 +16,29 @@ function setupBoardColors() {
     }
 }
 
+function setupDefaultBoardPieces() {
+    // White pieces...
+    for (var i = 0; i < 8; i++) {
+        pawnCreator(true, new Coordinate(i, 1));
+    }
+    rookCreator(true, new Coordinate(0,0)); 
+    rookCreator(true, new Coordinate(7,0)); 
+    knightCreator(true, new Coordinate(1,0));
+    knightCreator(true, new Coordinate(6,0));
+    bishopCreator(true, new Coordinate(2,0));
+    bishopCreator(true, new Coordinate(5,0));
+
+    // Black pieces...
+    for (var i = 0; i < 8; i++) {
+        pawnCreator(false, new Coordinate(i, 6));
+    }
+    rookCreator(false, new Coordinate(0,7)); 
+    rookCreator(false, new Coordinate(7,7)); 
+    knightCreator(false, new Coordinate(1,7));
+    knightCreator(false, new Coordinate(6,7));
+    bishopCreator(false, new Coordinate(2,7));
+    bishopCreator(false, new Coordinate(5,7));
+}
 
 var Board : Piece[][] | undefined[][] = [[],[],[],[],[],[],[],[]] 
 
@@ -23,9 +46,7 @@ let lastTouchedPiece : Piece;
 
 function initGame() {
     setupBoardColors();
-    pawnCreator(true, new Coordinate(5,6));
-    rookCreator(true, new Coordinate(7,0));
-    bishopCreator(true, new Coordinate(2,3));
+    setupDefaultBoardPieces();
     drawBoard();
     makePieceDraggable();
     makeCellsLandable();
@@ -34,18 +55,23 @@ function initGame() {
 
 function moveLikePawn(self : Piece) {
     if (self.IsWhite) {
-        if (Board[self.CurrentPosition.X-1][self.CurrentPosition.Y+1] !== undefined) {
-            if (Board[self.CurrentPosition.X-1][self.CurrentPosition.Y+1]?.IsWhite === false){
-                self.LegalMoves.push(new Coordinate(self.CurrentPosition.X-1, self.CurrentPosition.Y+1));
+
+        if (self.CurrentPosition.X-1 >= 0) {
+            if (Board[self.CurrentPosition.X-1][self.CurrentPosition.Y+1] !== undefined) {
+                if (Board[self.CurrentPosition.X-1][self.CurrentPosition.Y+1]?.IsWhite === false){
+                    self.LegalMoves.push(new Coordinate(self.CurrentPosition.X-1, self.CurrentPosition.Y+1));
+                }
             }
         }
 
-        if (Board[self.CurrentPosition.X+1][self.CurrentPosition.Y+1] !== undefined) {
-            if (Board[self.CurrentPosition.X+1][self.CurrentPosition.Y+1]?.IsWhite === false){
-                self.LegalMoves.push(new Coordinate(self.CurrentPosition.X-1, self.CurrentPosition.Y+1));
+        if (self.CurrentPosition.X+1 <= 7) {
+            if (Board[self.CurrentPosition.X+1][self.CurrentPosition.Y+1] !== undefined) {
+                if (Board[self.CurrentPosition.X+1][self.CurrentPosition.Y+1]?.IsWhite === false){
+                    self.LegalMoves.push(new Coordinate(self.CurrentPosition.X+1, self.CurrentPosition.Y+1));
+                }
             }
         }
-        
+
         if (Board[self.CurrentPosition.X][self.CurrentPosition.Y + 1] === undefined) {
             self.LegalMoves.push(new Coordinate(self.CurrentPosition.X, self.CurrentPosition.Y+1));
 
@@ -55,15 +81,19 @@ function moveLikePawn(self : Piece) {
         }
         
     } else {
-        if (Board[self.CurrentPosition.X-1][self.CurrentPosition.Y-1] !== undefined) {
-            if (Board[self.CurrentPosition.X-1][self.CurrentPosition.Y-1] ?.IsWhite === true){
-                self.LegalMoves.push(new Coordinate(self.CurrentPosition.X-1, self.CurrentPosition.Y-1));
+        if (self.CurrentPosition.X-1 >= 0) {
+            if (Board[self.CurrentPosition.X-1][self.CurrentPosition.Y-1] !== undefined) {
+                if (Board[self.CurrentPosition.X-1][self.CurrentPosition.Y-1] ?.IsWhite === true){
+                    self.LegalMoves.push(new Coordinate(self.CurrentPosition.X-1, self.CurrentPosition.Y-1));
+                }
             }
         }
 
-        if (Board[self.CurrentPosition.X+1][self.CurrentPosition.Y-1] !== undefined) {
-            if (Board[self.CurrentPosition.X+1][self.CurrentPosition.Y-1]?.IsWhite === true){
-                self.LegalMoves.push(new Coordinate(self.CurrentPosition.X+1, self.CurrentPosition.Y-1));
+        if (self.CurrentPosition.X+1 <= 7) {
+            if (Board[self.CurrentPosition.X+1][self.CurrentPosition.Y-1] !== undefined) {
+                if (Board[self.CurrentPosition.X+1][self.CurrentPosition.Y-1]?.IsWhite === true){
+                    self.LegalMoves.push(new Coordinate(self.CurrentPosition.X+1, self.CurrentPosition.Y-1));
+                }
             }
         }
 
@@ -171,18 +201,21 @@ function moveLikeBishop(self : Piece) {
 
 }
 
+function moveLikeKnight(self : Piece) {
+
+}
+
 function pawnCreator(isWhite : boolean, currentPosition : Coordinate) {
     let piece = new Piece(isWhite, currentPosition, "Pawn");
 
     piece.Moves.push(moveLikePawn);
-    piece.Moves[0](piece);
+    
     Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
 }
 
 function rookCreator(isWhite : boolean, currentPosition : Coordinate) {
     let piece = new Piece(isWhite, currentPosition, "Rook");
     piece.Moves.push(moveLikeRook)
-    piece.Moves[0](piece);
     Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
 }
 
@@ -190,9 +223,17 @@ function bishopCreator(isWhite: boolean, currentPosition : Coordinate) {
     let piece = new Piece(isWhite, currentPosition, "Bishop");
 
     piece.Moves.push(moveLikeBishop);
-    piece.Moves[0](piece);
     Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
 }
+
+function knightCreator(isWhite : boolean, currentPosition : Coordinate) {
+    let piece = new Piece(isWhite, currentPosition, "Knight");
+
+    piece.Moves.push(moveLikeKnight);
+    Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
+}
+
+
 
 
 
@@ -276,6 +317,7 @@ function updateLegalMoves(piece : Piece) {
     piece.LegalMoves = [];
     // använd addLegalPawnMoves() på ngt sätt....
     for (let i = 0; i < piece.Moves.length; i++) {
+        console.log(`updating for ${piece.Name}, i:${i}`);
         piece.Moves[i](piece);
     }
 }

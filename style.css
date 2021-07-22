@@ -39,5 +39,13 @@ body {
     height: 80px;
     margin: 0;
     padding: 0;
-    align-content: center;
+    align-content: center;    
+}
+
+.pawn {
+    background-image: url("");
+    background-repeat: no-repeat;
+    width: 80px;
+    height: 80px;
+    background-size: 80px;
 }
