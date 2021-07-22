@@ -1,4 +1,5 @@
-import { Coordinate } from "./Coordinate.js";
+import { Coordinate } from "./coordinate.js";
+
 export class Piece {
     constructor(IsWhite : boolean, CurrentPosition : Coordinate, Name : String) {
         this.IsWhite = IsWhite;
@@ -11,4 +12,5 @@ export class Piece {
     LegalMoves : Array<Coordinate> = [];
     CurrentPosition : Coordinate;
     Name : String;
+    Moves : Array<any> = [];
 }
