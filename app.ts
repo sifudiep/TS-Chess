@@ -27,6 +27,8 @@ function setupDefaultBoardPieces() {
     knightCreator(true, new Coordinate(6,0));
     bishopCreator(true, new Coordinate(2,0));
     bishopCreator(true, new Coordinate(5,0));
+    kingCreator(true, new Coordinate(3,0));
+    queenCreator(true, new Coordinate(4,0));
 
     // Black pieces...
     for (var i = 0; i < 8; i++) {
@@ -38,6 +40,11 @@ function setupDefaultBoardPieces() {
     knightCreator(false, new Coordinate(6,7));
     bishopCreator(false, new Coordinate(2,7));
     bishopCreator(false, new Coordinate(5,7));
+    kingCreator(false, new Coordinate(3,7));
+    queenCreator(false, new Coordinate(4,7));
+
+    destroyPiece(new Coordinate(3,6));
+
 }
 
 var Board : Piece[][] | undefined[][] = [[],[],[],[],[],[],[],[]] 
@@ -54,6 +61,16 @@ function initGame() {
 
 
 function moveLikePawn(self : Piece) {
+    // check for promotion...
+    if (self.CurrentPosition.Y == 0 || self.CurrentPosition.Y == 7) {
+        let coordinate : Coordinate = self.CurrentPosition;
+        let isWhite : boolean = self.IsWhite;
+        destroyPiece(self.CurrentPosition);
+        console.log(`creating queen at coordinate : (${coordinate.X}, ${coordinate.Y})`);
+        queenCreator(isWhite, coordinate);
+        drawVisualCell(Board[coordinate.X][coordinate.Y]!);
+    }
+
     if (self.IsWhite) {
 
         if (self.CurrentPosition.X-1 >= 0) {
@@ -202,7 +219,89 @@ function moveLikeBishop(self : Piece) {
 }
 
 function moveLikeKnight(self : Piece) {
+    let y = self.CurrentPosition.Y;
+    let x = self.CurrentPosition.X;
 
+    if (y + 2 <= 7) {
+        if (x + 1 <= 7 && Board[x+1][y+2]?.IsWhite !== self.IsWhite) {
+            self.LegalMoves.push(new Coordinate(x+1,y+2));
+        }
+
+        if (x - 1 >= 0 && Board[x-1][y+2]?.IsWhite !== self.IsWhite) {
+            self.LegalMoves.push(new Coordinate(x-1,y+2));
+        }
+    }
+
+    if (y - 2 >= 0) {
+        if (x + 1 <= 7 && Board[x+1][y-2]?.IsWhite !== self.IsWhite) {
+            self.LegalMoves.push(new Coordinate(x+1,y-2));
+        }
+
+        if (x - 1 >= 0 && Board[x-1][y-2]?.IsWhite !== self.IsWhite) {
+            self.LegalMoves.push(new Coordinate(x-1,y-2));
+        }
+    }
+
+    if (x + 2 <= 7) {
+        if (y + 1 <= 7 && Board[x+2][y+1]?.IsWhite !== self.IsWhite) {
+            self.LegalMoves.push(new Coordinate(x+2,y+1));
+        }
+
+        if (y - 1 >= 0 && Board[x+2][y-1]?.IsWhite !== self.IsWhite) {
+            self.LegalMoves.push(new Coordinate(x+2,y-1));
+        }
+    }
+
+    if (x - 2 >= 0) {
+        if (y + 1 <= 7 && Board[x-2][y+1]?.IsWhite !== self.IsWhite) {
+            self.LegalMoves.push(new Coordinate(x-2,y+1));
+        }
+
+        if (y - 1 >= 0 && Board[x-2][y-1]?.IsWhite !== self.IsWhite) {
+            self.LegalMoves.push(new Coordinate(x-2,y-1));
+        }
+    }
+}
+
+function moveLikeKing(self : Piece) {
+    let x = self.CurrentPosition.X;
+    let y = self.CurrentPosition.Y;
+
+    if (x + 1 <= 7 && Board[x+1][y]?.IsWhite !== self.IsWhite) {
+        self.LegalMoves.push(new Coordinate(x + 1, y));
+    }
+
+    if (x + 1 <= 7 && y + 1 <= 7 && Board[x+1][y+1]?.IsWhite !== self.IsWhite) {
+        self.LegalMoves.push(new Coordinate(x+1,y+1));
+    }
+    if (x + 1 <= 7 && y - 1 >= 0 && Board[x+1][y-1]?.IsWhite !== self.IsWhite) {
+        self.LegalMoves.push(new Coordinate(x+1,y-1));
+    }
+
+    if (x - 1 >= 0 && Board[x-1][y]?.IsWhite !== self.IsWhite) {
+        self.LegalMoves.push(new Coordinate(x - 1, y));
+    }
+
+    if (x - 1 >= 0 && y + 1 <= 7 && Board[x-1][y+1]?.IsWhite !== self.IsWhite) {
+        self.LegalMoves.push(new Coordinate(x-1,y+1));
+    }
+    if (x - 1 >= 0 && y - 1 >= 0 && Board[x-1][y-1]?.IsWhite !== self.IsWhite) {
+        self.LegalMoves.push(new Coordinate(x-1,y-1));
+    }
+
+    if (y + 1 <= 7 && Board[x][y+1]?.IsWhite !== self.IsWhite) {
+        self.LegalMoves.push(new Coordinate(x, y + 1));
+    }
+
+    if (y - 1 >= 0 && Board[x][y-1]?.IsWhite !== self.IsWhite) {
+        self.LegalMoves.push(new Coordinate(x, y - 1));
+    }
+
+}
+
+function moveLikeQueen(self : Piece) {
+    moveLikeRook(self);
+    moveLikeBishop(self);
 }
 
 function pawnCreator(isWhite : boolean, currentPosition : Coordinate) {
@@ -212,24 +311,33 @@ function pawnCreator(isWhite : boolean, currentPosition : Coordinate) {
     
     Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
 }
-
 function rookCreator(isWhite : boolean, currentPosition : Coordinate) {
     let piece = new Piece(isWhite, currentPosition, "Rook");
     piece.Moves.push(moveLikeRook)
     Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
 }
-
 function bishopCreator(isWhite: boolean, currentPosition : Coordinate) {
     let piece = new Piece(isWhite, currentPosition, "Bishop");
 
     piece.Moves.push(moveLikeBishop);
     Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
 }
-
 function knightCreator(isWhite : boolean, currentPosition : Coordinate) {
     let piece = new Piece(isWhite, currentPosition, "Knight");
 
     piece.Moves.push(moveLikeKnight);
+    Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
+}
+function kingCreator(isWhite : boolean, currentPosition : Coordinate) {
+    let piece = new Piece(isWhite, currentPosition, "King");
+
+    piece.Moves.push(moveLikeKing);
+    Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
+}
+function queenCreator(isWhite : boolean, currentPosition : Coordinate) {
+    let piece = new Piece(isWhite, currentPosition, "Queen");
+
+    piece.Moves.push(moveLikeQueen);
     Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
 }
 
@@ -300,17 +408,16 @@ function drawVisualCell(piece : Piece) {
 function movePiece(piece : Piece, destination : Coordinate) {
     let formerCoordinates = piece.CurrentPosition;
     removeVisualCell(piece.CurrentPosition);
-    updatePiecePosition(piece, destination)
+    destroyPiece(destination);
+    updatePiecePosition(piece, destination);
     drawVisualCell(piece);
     Board[formerCoordinates.X][formerCoordinates.Y] = undefined;
-    console.log(`Moved ${piece.Name} at (${formerCoordinates.X},${formerCoordinates.Y}) -> (${piece.CurrentPosition.X},${piece.CurrentPosition.Y})`);
+    // console.log(`Moved ${piece.Name} at (${formerCoordinates.X},${formerCoordinates.Y}) -> (${piece.CurrentPosition.X},${piece.CurrentPosition.Y})`);
 
 }
 function updateLegalMoves(piece : Piece) {
     piece.LegalMoves = [];
-    // använd addLegalPawnMoves() på ngt sätt....
     for (let i = 0; i < piece.Moves.length; i++) {
-        console.log(`updating for ${piece.Name}, i:${i}`);
         piece.Moves[i](piece);
     }
 }
@@ -371,8 +478,12 @@ function makeCellsLandable() {
         e.preventDefault();
         if(!e) return false;
         
-        if (e.target.className.includes("legalMove")) {
-            let dropCoordinate : Coordinate = getCoordinateFromElement(e.target)!;
+
+        if (e.target.className.includes("legalMove") || e.target.parentElement.className.includes("legalMove")) {
+            let target = e.target.className.includes("legalMove") ? e.target : e.target.parentElement; 
+            let dropCoordinate : Coordinate = getCoordinateFromElement(target)
+
+            console.log(`dropCoordinate : (${dropCoordinate.X}, ${dropCoordinate.Y})`);
             movePiece(lastTouchedPiece, dropCoordinate);
             unhighlightLegalMoves(lastTouchedPiece);
             updateLegalMoves(lastTouchedPiece);
@@ -399,6 +510,11 @@ function getCoordinateFromElement(element : any) {
     
 }
 
-// Change draggable...
+function destroyPiece(coordinate : Coordinate) {
+    if (Board[coordinate.X][coordinate.Y] !== undefined) {
+        removeVisualCell(coordinate);
+        Board[coordinate.X][coordinate.Y] = undefined;
+    }
+}
 
 initGame();
