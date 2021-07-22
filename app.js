@@ -25,17 +25,18 @@ function initGame() {
     makeCellsLandable();
 }
 function moveLikePawn(piece) {
+    var _a, _b, _c, _d;
     if (piece.IsWhite) {
-        // if (Board[self.CurrentPosition.X-1][self.CurrentPosition.Y+1] !== undefined) {
-        //     if (Board[self.CurrentPosition.X-1][self.CurrentPosition.Y+1].IsWhite === false){
-        //         self.LegalMoves.push(new Coordinate(self.CurrentPosition.X-1, self.CurrentPosition.Y+1));
-        //     }
-        // }
-        // if (Board[self.CurrentPosition.X+1][self.CurrentPosition.Y+1] !== undefined) {
-        //     if (Board[self.CurrentPosition.X+1][self.CurrentPosition.Y+1].IsWhite === false){
-        //         self.LegalMoves.push(new Coordinate(self.CurrentPosition.X+1, self.CurrentPosition.Y+1));
-        //     }
-        // }
+        if (Board[piece.CurrentPosition.X - 1][piece.CurrentPosition.Y + 1] !== undefined) {
+            if (((_a = Board[piece.CurrentPosition.X - 1][piece.CurrentPosition.Y + 1]) === null || _a === void 0 ? void 0 : _a.IsWhite) === false) {
+                piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X - 1, piece.CurrentPosition.Y + 1));
+            }
+        }
+        if (Board[piece.CurrentPosition.X + 1][piece.CurrentPosition.Y + 1] !== undefined) {
+            if (((_b = Board[piece.CurrentPosition.X + 1][piece.CurrentPosition.Y + 1]) === null || _b === void 0 ? void 0 : _b.IsWhite) === false) {
+                piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X - 1, piece.CurrentPosition.Y + 1));
+            }
+        }
         if (Board[piece.CurrentPosition.X][piece.CurrentPosition.Y + 1] === undefined) {
             piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X, piece.CurrentPosition.Y + 1));
             if (Board[piece.CurrentPosition.X][piece.CurrentPosition.Y + 2] === undefined && piece.HasBeenMoved === false) {
@@ -44,16 +45,16 @@ function moveLikePawn(piece) {
         }
     }
     else {
-        // if (Board[self.CurrentPosition.X-1][self.CurrentPosition.Y-1] !== undefined) {
-        //     if (Board[self.CurrentPosition.X-1][self.CurrentPosition.Y-1].IsWhite === true){
-        //         self.LegalMoves.push(new Coordinate(self.CurrentPosition.X-1, self.CurrentPosition.Y-1));
-        //     }
-        // }
-        // if (Board[self.CurrentPosition.X+1][self.CurrentPosition.Y-1] !== undefined) {
-        //     if (Board[self.CurrentPosition.X+1][self.CurrentPosition.Y-1].IsWhite === true){
-        //         self.LegalMoves.push(new Coordinate(self.CurrentPosition.X+1, self.CurrentPosition.Y-1));
-        //     }
-        // }
+        if (Board[piece.CurrentPosition.X - 1][piece.CurrentPosition.Y - 1] !== undefined) {
+            if (((_c = Board[piece.CurrentPosition.X - 1][piece.CurrentPosition.Y - 1]) === null || _c === void 0 ? void 0 : _c.IsWhite) === true) {
+                piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X - 1, piece.CurrentPosition.Y - 1));
+            }
+        }
+        if (Board[piece.CurrentPosition.X + 1][piece.CurrentPosition.Y - 1] !== undefined) {
+            if (((_d = Board[piece.CurrentPosition.X + 1][piece.CurrentPosition.Y - 1]) === null || _d === void 0 ? void 0 : _d.IsWhite) === true) {
+                piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X + 1, piece.CurrentPosition.Y - 1));
+            }
+        }
         if (Board[piece.CurrentPosition.X][piece.CurrentPosition.Y - 1] === undefined) {
             piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X, piece.CurrentPosition.Y - 1));
             if (Board[piece.CurrentPosition.X][piece.CurrentPosition.Y - 2] === undefined && piece.HasBeenMoved === false) {
@@ -188,7 +189,9 @@ function movePiece(piece, destination) {
 function updateLegalMoves(piece) {
     piece.LegalMoves = [];
     // använd addLegalPawnMoves() på ngt sätt....
-    piece.Moves[0](piece);
+    for (let i = 0; i < piece.Moves.length; i++) {
+        piece.Moves[i](piece);
+    }
 }
 function highlightLegalMoves(piece) {
     for (let i = 0; i < piece.LegalMoves.length; i++) {
@@ -209,6 +212,7 @@ function makePieceDraggable() {
         let piece = Board[colIndex][rowIndex];
         if (piece == undefined)
             return;
+        updateLegalMoves(piece);
         highlightLegalMoves(piece);
         lastTouchedPiece = piece;
     });

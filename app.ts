@@ -33,17 +33,17 @@ function initGame() {
 
 function moveLikePawn(piece : Piece) {
     if (piece.IsWhite) {
-        // if (Board[self.CurrentPosition.X-1][self.CurrentPosition.Y+1] !== undefined) {
-        //     if (Board[self.CurrentPosition.X-1][self.CurrentPosition.Y+1].IsWhite === false){
-        //         self.LegalMoves.push(new Coordinate(self.CurrentPosition.X-1, self.CurrentPosition.Y+1));
-        //     }
-        // }
+        if (Board[piece.CurrentPosition.X-1][piece.CurrentPosition.Y+1] !== undefined) {
+            if (Board[piece.CurrentPosition.X-1][piece.CurrentPosition.Y+1]?.IsWhite === false){
+                piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X-1, piece.CurrentPosition.Y+1));
+            }
+        }
 
-        // if (Board[self.CurrentPosition.X+1][self.CurrentPosition.Y+1] !== undefined) {
-        //     if (Board[self.CurrentPosition.X+1][self.CurrentPosition.Y+1].IsWhite === false){
-        //         self.LegalMoves.push(new Coordinate(self.CurrentPosition.X+1, self.CurrentPosition.Y+1));
-        //     }
-        // }
+        if (Board[piece.CurrentPosition.X+1][piece.CurrentPosition.Y+1] !== undefined) {
+            if (Board[piece.CurrentPosition.X+1][piece.CurrentPosition.Y+1]?.IsWhite === false){
+                piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X-1, piece.CurrentPosition.Y+1));
+            }
+        }
         
         if (Board[piece.CurrentPosition.X][piece.CurrentPosition.Y + 1] === undefined) {
             piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X, piece.CurrentPosition.Y+1));
@@ -54,17 +54,17 @@ function moveLikePawn(piece : Piece) {
         }
         
     } else {
-        // if (Board[self.CurrentPosition.X-1][self.CurrentPosition.Y-1] !== undefined) {
-        //     if (Board[self.CurrentPosition.X-1][self.CurrentPosition.Y-1].IsWhite === true){
-        //         self.LegalMoves.push(new Coordinate(self.CurrentPosition.X-1, self.CurrentPosition.Y-1));
-        //     }
-        // }
+        if (Board[piece.CurrentPosition.X-1][piece.CurrentPosition.Y-1] !== undefined) {
+            if (Board[piece.CurrentPosition.X-1][piece.CurrentPosition.Y-1] ?.IsWhite === true){
+                piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X-1, piece.CurrentPosition.Y-1));
+            }
+        }
 
-        // if (Board[self.CurrentPosition.X+1][self.CurrentPosition.Y-1] !== undefined) {
-        //     if (Board[self.CurrentPosition.X+1][self.CurrentPosition.Y-1].IsWhite === true){
-        //         self.LegalMoves.push(new Coordinate(self.CurrentPosition.X+1, self.CurrentPosition.Y-1));
-        //     }
-        // }
+        if (Board[piece.CurrentPosition.X+1][piece.CurrentPosition.Y-1] !== undefined) {
+            if (Board[piece.CurrentPosition.X+1][piece.CurrentPosition.Y-1]?.IsWhite === true){
+                piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X+1, piece.CurrentPosition.Y-1));
+            }
+        }
 
         if (Board[piece.CurrentPosition.X][piece.CurrentPosition.Y - 1] === undefined) {
             piece.LegalMoves.push(new Coordinate(piece.CurrentPosition.X, piece.CurrentPosition.Y-1));
@@ -219,7 +219,9 @@ function movePiece(piece : Piece, destination : Coordinate) {
 function updateLegalMoves(piece : Piece) {
     piece.LegalMoves = [];
     // använd addLegalPawnMoves() på ngt sätt....
-    piece.Moves[0](piece);
+    for (let i = 0; i < piece.Moves.length; i++) {
+        piece.Moves[i](piece);
+    }
 }
 
 function highlightLegalMoves(piece : Piece) {
@@ -243,6 +245,9 @@ function makePieceDraggable() {
 
         let piece : Piece | undefined = Board[colIndex][rowIndex];
         if (piece == undefined) return;
+
+        updateLegalMoves(piece);
+
         highlightLegalMoves(piece);
 
         lastTouchedPiece = piece;
