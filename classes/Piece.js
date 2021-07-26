@@ -1,5 +1,8 @@
-export class Piece {
-    constructor(IsWhite, CurrentPosition, Name) {
+"use strict";
+exports.__esModule = true;
+exports.Piece = void 0;
+var Piece = /** @class */ (function () {
+    function Piece(IsWhite, CurrentPosition, Name) {
         this.HasBeenMoved = false;
         this.LegalMoves = [];
         this.Moves = [];
@@ -7,4 +10,6 @@ export class Piece {
         this.CurrentPosition = CurrentPosition;
         this.Name = Name;
     }
-}
+    return Piece;
+}());
+exports.Piece = Piece;

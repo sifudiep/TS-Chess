@@ -16,9 +16,11 @@ function setupBoardColors() {
     }
 }
 
+let isWhiteTurn : boolean = true;
+
 function setupDefaultBoardPieces() {
     // White pieces...
-    for (var i = 0; i < 8; i++) {
+    for (let i = 0; i < 8; i++) {
         pawnCreator(true, new Coordinate(i, 1));
     }
     rookCreator(true, new Coordinate(0,0)); 
@@ -27,11 +29,11 @@ function setupDefaultBoardPieces() {
     knightCreator(true, new Coordinate(6,0));
     bishopCreator(true, new Coordinate(2,0));
     bishopCreator(true, new Coordinate(5,0));
-    kingCreator(true, new Coordinate(3,0));
-    queenCreator(true, new Coordinate(4,0));
+    kingCreator(true, new Coordinate(4,0));
+    queenCreator(true, new Coordinate(3,0));
 
     // Black pieces...
-    for (var i = 0; i < 8; i++) {
+    for (let i = 0; i < 8; i++) {
         pawnCreator(false, new Coordinate(i, 6));
     }
     rookCreator(false, new Coordinate(0,7)); 
@@ -40,16 +42,17 @@ function setupDefaultBoardPieces() {
     knightCreator(false, new Coordinate(6,7));
     bishopCreator(false, new Coordinate(2,7));
     bishopCreator(false, new Coordinate(5,7));
-    kingCreator(false, new Coordinate(3,7));
-    queenCreator(false, new Coordinate(4,7));
-
-    destroyPiece(new Coordinate(3,6));
-
+    kingCreator(false, new Coordinate(4,7));
+    queenCreator(false, new Coordinate(3,7));
 }
 
-var Board : Piece[][] | undefined[][] = [[],[],[],[],[],[],[],[]] 
+let Board : Piece[][] | undefined[][] = [[],[],[],[],[],[],[],[]] 
 
 let lastTouchedPiece : Piece;
+
+let whiteKing : Piece; 
+let blackKing : Piece;
+
 
 function initGame() {
     setupBoardColors();
@@ -57,16 +60,16 @@ function initGame() {
     drawBoard();
     makePieceDraggable();
     makeCellsLandable();
+    updateAllLegalMovesAndFindChecks();
 }
 
 
 function moveLikePawn(self : Piece) {
-    // check for promotion...
+    // auto promoting into queen
     if (self.CurrentPosition.Y == 0 || self.CurrentPosition.Y == 7) {
         let coordinate : Coordinate = self.CurrentPosition;
         let isWhite : boolean = self.IsWhite;
         destroyPiece(self.CurrentPosition);
-        console.log(`creating queen at coordinate : (${coordinate.X}, ${coordinate.Y})`);
         queenCreator(isWhite, coordinate);
         drawVisualCell(Board[coordinate.X][coordinate.Y]!);
     }
@@ -299,11 +302,6 @@ function moveLikeKing(self : Piece) {
 
 }
 
-function moveLikeQueen(self : Piece) {
-    moveLikeRook(self);
-    moveLikeBishop(self);
-}
-
 function pawnCreator(isWhite : boolean, currentPosition : Coordinate) {
     let piece = new Piece(isWhite, currentPosition, "Pawn");
 
@@ -333,11 +331,17 @@ function kingCreator(isWhite : boolean, currentPosition : Coordinate) {
 
     piece.Moves.push(moveLikeKing);
     Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
+    if (isWhite) {
+        whiteKing = piece;
+    } else {
+        blackKing = piece;
+    }
 }
 function queenCreator(isWhite : boolean, currentPosition : Coordinate) {
     let piece = new Piece(isWhite, currentPosition, "Queen");
 
-    piece.Moves.push(moveLikeQueen);
+    piece.Moves.push(moveLikeBishop);
+    piece.Moves.push(moveLikeRook);
     Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
 }
 
@@ -412,6 +416,8 @@ function movePiece(piece : Piece, destination : Coordinate) {
     updatePiecePosition(piece, destination);
     drawVisualCell(piece);
     Board[formerCoordinates.X][formerCoordinates.Y] = undefined;
+    isWhiteTurn = !isWhiteTurn;
+    updateAllLegalMovesAndFindChecks();
     // console.log(`Moved ${piece.Name} at (${formerCoordinates.X},${formerCoordinates.Y}) -> (${piece.CurrentPosition.X},${piece.CurrentPosition.Y})`);
 
 }
@@ -436,19 +442,44 @@ function unhighlightLegalMoves(piece : Piece) {
     }
 }
 
+function updateAllLegalMovesAndFindChecks() {
+    // kolla om alla pjäsen är MOTSATT till kungens färg.
+    let whiteKingIsChecked : boolean = false;
+    let blackKingIsChecked : boolean = false;
+
+
+    for (let y = 0; y <= 7; y++) {
+       for (let x = 0; x <= 7; x++) {
+            if (Board[x][y] === undefined) continue;
+            updateLegalMoves(Board[x][y]!);
+            let opponentKing : Piece = Board[x][y]!.IsWhite ? blackKing : whiteKing;
+            Board[x][y]!.LegalMoves.forEach(legalMove => {
+                if (legalMove.X === opponentKing.CurrentPosition.X && legalMove.Y === opponentKing.CurrentPosition.Y) {
+                    console.log(`CHECKED!!!`);
+                }
+            });
+       }
+    }
+
+    console.log(`done with finding checks....`);
+    
+    return {
+        blackKingIsChecked,
+        whiteKingIsChecked
+    }
+}
+
 function makePieceDraggable() {
-    document.addEventListener("dragstart", (e : DragEvent) => {
+    document.addEventListener("dragstart", (e) => {
         let colIndex = parseInt(e.path[1].id.replace("col-", "")) - 1;
         let rowIndex = parseInt(e.path[1].getAttribute("row")!) - 1;
 
         let piece : Piece | undefined = Board[colIndex][rowIndex];
         if (piece == undefined) return;
-
-        updateLegalMoves(piece);
-
-        highlightLegalMoves(piece);
-
-        lastTouchedPiece = piece;
+        if (piece.IsWhite === isWhiteTurn) {
+            highlightLegalMoves(piece);
+            lastTouchedPiece = piece;
+        }
     });
 
 //     // document.addEventListener("drag", (e) => {
@@ -462,7 +493,10 @@ function makePieceDraggable() {
 
         let piece : Piece | undefined = Board[colIndex][rowIndex];        
         if (piece == undefined) return;
-        unhighlightLegalMoves(piece);
+
+        unhighlightLegalMoves(lastTouchedPiece);
+
+
     });
 }
 
@@ -477,16 +511,13 @@ function makeCellsLandable() {
     document.addEventListener("drop", function(e : any) {
         e.preventDefault();
         if(!e) return false;
-        
 
         if (e.target.className.includes("legalMove") || e.target.parentElement.className.includes("legalMove")) {
             let target = e.target.className.includes("legalMove") ? e.target : e.target.parentElement; 
             let dropCoordinate : Coordinate = getCoordinateFromElement(target)
 
-            console.log(`dropCoordinate : (${dropCoordinate.X}, ${dropCoordinate.Y})`);
-            movePiece(lastTouchedPiece, dropCoordinate);
             unhighlightLegalMoves(lastTouchedPiece);
-            updateLegalMoves(lastTouchedPiece);
+            movePiece(lastTouchedPiece, dropCoordinate);
         }
     })
 }
