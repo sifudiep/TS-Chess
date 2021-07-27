@@ -302,6 +302,20 @@ function moveLikeKing(self : Piece) {
         self.LegalMoves.push(new Coordinate(x, y - 1));
     }
 
+    // castling...
+    let ownKingIsChecked = self.IsWhite ? whiteKingIsChecked : blackKingIsChecked;
+    if (!self.HasBeenMoved && !ownKingIsChecked) {
+        if (Board[5][self.CurrentPosition.Y] === undefined && Board[6][self.CurrentPosition.Y] === undefined && Board[7][self.CurrentPosition.Y] !== undefined && Board[7][self.CurrentPosition.Y]?.HasBeenMoved === false) {
+            self.LegalMoves.push(new Coordinate(6,self.CurrentPosition.Y));
+            self.LegalMoves.push(new Coordinate(7,self.CurrentPosition.Y));
+        }
+        if (Board[3][self.CurrentPosition.Y] === undefined && Board[2][self.CurrentPosition.Y] === undefined && Board[0][self.CurrentPosition.Y] !== undefined && Board[0][self.CurrentPosition.Y]?.HasBeenMoved === false) {
+            self.LegalMoves.push(new Coordinate(2,self.CurrentPosition.Y));
+            self.LegalMoves.push(new Coordinate(0, self.CurrentPosition.Y));
+        }
+    }
+    
+
 }
 
 function pawnCreator(isWhite : boolean, currentPosition : Coordinate) {
@@ -387,7 +401,6 @@ function updatePiecePosition(piece : Piece, destination : Coordinate) {
     Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = undefined;
     piece.CurrentPosition = destination;
     Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
-    piece.HasBeenMoved = true;
 }
 
 function drawVisualCell(piece : Piece) {
@@ -408,6 +421,27 @@ function drawVisualCell(piece : Piece) {
 }
 
 function movePiece(piece : Piece, destination : Coordinate) {
+    // Castling
+    if (piece.Name === "King") {
+        let xDifference = piece.CurrentPosition.X - destination.X;
+        if (Math.abs(xDifference) > 1) {
+            // Castle LEFT
+            if (xDifference > 0) {
+                for (let i = 3; i >= 2; i--) {
+                    if (moveIsIllegal(piece, new Coordinate(i, piece.CurrentPosition.Y))) return
+                }
+                destination.X = 2;
+                movePiece(Board[0][piece.CurrentPosition.Y]!, new Coordinate(3, piece.CurrentPosition.Y));
+            } else { // Castle RIGHT
+                for (let i = 5; i <= 6; i++) {
+                    if (moveIsIllegal(piece, new Coordinate(i, piece.CurrentPosition.Y))) return
+                }
+                destination.X = 6;
+                movePiece(Board[7][piece.CurrentPosition.Y]!, new Coordinate(5, piece.CurrentPosition.Y));
+            }
+        }
+    }
+
     let formerCoordinates = piece.CurrentPosition;
     removeVisualCell(formerCoordinates);
     destroyPiece(destination);
@@ -436,8 +470,6 @@ function moveIsIllegal(piece : Piece, destination : Coordinate) {
     updateLegalMoves(piece);
     if (destinationPiece !== undefined) updatePiecePosition(destinationPiece, destinationPiece.CurrentPosition);
 
-
-    console.log(`moveIsIllegal : ${kingGetsChecked}`);
     drawBoard();
     return kingGetsChecked;
 }
@@ -491,7 +523,7 @@ function makePieceDraggable() {
 
         let piece : Piece | undefined = Board[colIndex][rowIndex];
         if (piece == undefined) return;
-        if (piece.IsWhite === isWhiteTurn) {
+        if (piece.IsWhite === isWhiteTurn || true) {
             updateLegalMoves(piece);
             highlightLegalMoves(piece);
             lastTouchedPiece = piece;
@@ -533,8 +565,8 @@ function makeCellsLandable() {
             let dropCoordinate : Coordinate = getCoordinateFromElement(target)
 
             if (moveIsIllegal(lastTouchedPiece, dropCoordinate) === false) {
-                console.log(`moved piece!!`);
                 movePiece(lastTouchedPiece, dropCoordinate);
+                lastTouchedPiece.HasBeenMoved = true;
             }
 
             unhighlightLegalMoves(lastTouchedPiece);

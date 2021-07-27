@@ -244,7 +244,7 @@ function moveLikeKnight(self) {
     }
 }
 function moveLikeKing(self) {
-    var _a, _b, _c, _d, _e, _f, _g, _h;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
     var x = self.CurrentPosition.X;
     var y = self.CurrentPosition.Y;
     if (x + 1 <= 7 && ((_a = Board[x + 1][y]) === null || _a === void 0 ? void 0 : _a.IsWhite) !== self.IsWhite) {
@@ -270,6 +270,18 @@ function moveLikeKing(self) {
     }
     if (y - 1 >= 0 && ((_h = Board[x][y - 1]) === null || _h === void 0 ? void 0 : _h.IsWhite) !== self.IsWhite) {
         self.LegalMoves.push(new coordinate_js_1.Coordinate(x, y - 1));
+    }
+    // castling...
+    var ownKingIsChecked = self.IsWhite ? whiteKingIsChecked : blackKingIsChecked;
+    if (!self.HasBeenMoved && !ownKingIsChecked) {
+        if (Board[5][self.CurrentPosition.Y] === undefined && Board[6][self.CurrentPosition.Y] === undefined && Board[7][self.CurrentPosition.Y] !== undefined && ((_j = Board[7][self.CurrentPosition.Y]) === null || _j === void 0 ? void 0 : _j.HasBeenMoved) === false) {
+            self.LegalMoves.push(new coordinate_js_1.Coordinate(6, self.CurrentPosition.Y));
+            self.LegalMoves.push(new coordinate_js_1.Coordinate(7, self.CurrentPosition.Y));
+        }
+        if (Board[3][self.CurrentPosition.Y] === undefined && Board[2][self.CurrentPosition.Y] === undefined && Board[0][self.CurrentPosition.Y] !== undefined && ((_k = Board[0][self.CurrentPosition.Y]) === null || _k === void 0 ? void 0 : _k.HasBeenMoved) === false) {
+            self.LegalMoves.push(new coordinate_js_1.Coordinate(2, self.CurrentPosition.Y));
+            self.LegalMoves.push(new coordinate_js_1.Coordinate(0, self.CurrentPosition.Y));
+        }
     }
 }
 function pawnCreator(isWhite, currentPosition) {
@@ -345,7 +357,6 @@ function updatePiecePosition(piece, destination) {
     Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = undefined;
     piece.CurrentPosition = destination;
     Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
-    piece.HasBeenMoved = true;
 }
 function drawVisualCell(piece) {
     var visualCell = getVisualCell(piece.CurrentPosition);
@@ -361,6 +372,29 @@ function drawVisualCell(piece) {
     visualCell.appendChild(visualCellImgBackground);
 }
 function movePiece(piece, destination) {
+    // Castling
+    if (piece.Name === "King") {
+        var xDifference = piece.CurrentPosition.X - destination.X;
+        if (Math.abs(xDifference) > 1) {
+            // Castle LEFT
+            if (xDifference > 0) {
+                for (var i = 3; i >= 2; i--) {
+                    if (moveIsIllegal(piece, new coordinate_js_1.Coordinate(i, piece.CurrentPosition.Y)))
+                        return;
+                }
+                destination.X = 2;
+                movePiece(Board[0][piece.CurrentPosition.Y], new coordinate_js_1.Coordinate(3, piece.CurrentPosition.Y));
+            }
+            else { // Castle RIGHT
+                for (var i = 5; i <= 6; i++) {
+                    if (moveIsIllegal(piece, new coordinate_js_1.Coordinate(i, piece.CurrentPosition.Y)))
+                        return;
+                }
+                destination.X = 6;
+                movePiece(Board[7][piece.CurrentPosition.Y], new coordinate_js_1.Coordinate(5, piece.CurrentPosition.Y));
+            }
+        }
+    }
     var formerCoordinates = piece.CurrentPosition;
     removeVisualCell(formerCoordinates);
     destroyPiece(destination);
@@ -443,7 +477,7 @@ function makePieceDraggable() {
         var piece = Board[colIndex][rowIndex];
         if (piece == undefined)
             return;
-        if (piece.IsWhite === isWhiteTurn) {
+        if (piece.IsWhite === isWhiteTurn || true) {
             updateLegalMoves(piece);
             highlightLegalMoves(piece);
             lastTouchedPiece = piece;
@@ -477,6 +511,7 @@ function makeCellsLandable() {
             if (moveIsIllegal(lastTouchedPiece, dropCoordinate) === false) {
                 console.log("moved piece!!");
                 movePiece(lastTouchedPiece, dropCoordinate);
+                lastTouchedPiece.HasBeenMoved = true;
             }
             unhighlightLegalMoves(lastTouchedPiece);
         }
