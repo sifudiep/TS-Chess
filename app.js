@@ -47,6 +47,8 @@ var Board = [[], [], [], [], [], [], [], []];
 var lastTouchedPiece;
 var whiteKing;
 var blackKing;
+var whiteKingIsChecked = false;
+var blackKingIsChecked = false;
 function initGame() {
     setupBoardColors();
     setupDefaultBoardPieces();
@@ -360,7 +362,7 @@ function drawVisualCell(piece) {
 }
 function movePiece(piece, destination) {
     var formerCoordinates = piece.CurrentPosition;
-    removeVisualCell(piece.CurrentPosition);
+    removeVisualCell(formerCoordinates);
     destroyPiece(destination);
     updatePiecePosition(piece, destination);
     drawVisualCell(piece);
@@ -368,6 +370,26 @@ function movePiece(piece, destination) {
     isWhiteTurn = !isWhiteTurn;
     updateAllLegalMovesAndFindChecks();
     // console.log(`Moved ${piece.Name} at (${formerCoordinates.X},${formerCoordinates.Y}) -> (${piece.CurrentPosition.X},${piece.CurrentPosition.Y})`);
+}
+function moveIsIllegal(piece, destination) {
+    var formerCoordinates = piece.CurrentPosition;
+    var destinationPiece = Board[destination.X][destination.Y];
+    unhighlightLegalMoves(piece);
+    updatePiecePosition(piece, destination);
+    updateAllLegalMovesAndFindChecks();
+    var kingGetsChecked = false;
+    if (piece.IsWhite && whiteKingIsChecked)
+        kingGetsChecked = true;
+    if (piece.IsWhite === false && blackKingIsChecked)
+        kingGetsChecked = true;
+    // Revert board to former state
+    updatePiecePosition(piece, formerCoordinates);
+    updateLegalMoves(piece);
+    if (destinationPiece !== undefined)
+        updatePiecePosition(destinationPiece, destinationPiece.CurrentPosition);
+    console.log("moveIsIllegal : " + kingGetsChecked);
+    drawBoard();
+    return kingGetsChecked;
 }
 function updateLegalMoves(piece) {
     piece.LegalMoves = [];
@@ -380,40 +402,39 @@ function highlightLegalMoves(piece) {
         var visualCell = getVisualCell(piece.LegalMoves[i]);
         visualCell.className += " legalMove";
     }
-    console.log("highlighting...");
 }
 function unhighlightLegalMoves(piece) {
     for (var i = 0; i < piece.LegalMoves.length; i++) {
         var visualCell = getVisualCell(piece.LegalMoves[i]);
         visualCell.className = visualCell.className.replace(" legalMove", "");
     }
-    console.log("UNhighlighting...");
 }
 function updateAllLegalMovesAndFindChecks() {
-    // kolla om alla pjäsen är MOTSATT till kungens färg.
-    var whiteKingIsChecked = false;
-    var blackKingIsChecked = false;
-    for (var y = 0; y <= 7; y++) {
-        var _loop_1 = function (x) {
+    whiteKingIsChecked = false;
+    blackKingIsChecked = false;
+    var _loop_1 = function (y) {
+        var _loop_2 = function (x) {
             if (Board[x][y] === undefined)
                 return "continue";
             updateLegalMoves(Board[x][y]);
             var opponentKing = Board[x][y].IsWhite ? blackKing : whiteKing;
             Board[x][y].LegalMoves.forEach(function (legalMove) {
+                var _a;
                 if (legalMove.X === opponentKing.CurrentPosition.X && legalMove.Y === opponentKing.CurrentPosition.Y) {
-                    console.log("CHECKED!!!");
+                    if ((_a = Board[x][y]) === null || _a === void 0 ? void 0 : _a.IsWhite)
+                        blackKingIsChecked = true;
+                    else
+                        whiteKingIsChecked = true;
                 }
             });
         };
         for (var x = 0; x <= 7; x++) {
-            _loop_1(x);
+            _loop_2(x);
         }
-    }
-    console.log("done with finding checks....");
-    return {
-        blackKingIsChecked: blackKingIsChecked,
-        whiteKingIsChecked: whiteKingIsChecked
     };
+    for (var y = 0; y <= 7; y++) {
+        _loop_1(y);
+    }
 }
 function makePieceDraggable() {
     document.addEventListener("dragstart", function (e) {
@@ -423,6 +444,7 @@ function makePieceDraggable() {
         if (piece == undefined)
             return;
         if (piece.IsWhite === isWhiteTurn) {
+            updateLegalMoves(piece);
             highlightLegalMoves(piece);
             lastTouchedPiece = piece;
         }
@@ -452,8 +474,11 @@ function makeCellsLandable() {
         if (e.target.className.includes("legalMove") || e.target.parentElement.className.includes("legalMove")) {
             var target = e.target.className.includes("legalMove") ? e.target : e.target.parentElement;
             var dropCoordinate = getCoordinateFromElement(target);
+            if (moveIsIllegal(lastTouchedPiece, dropCoordinate) === false) {
+                console.log("moved piece!!");
+                movePiece(lastTouchedPiece, dropCoordinate);
+            }
             unhighlightLegalMoves(lastTouchedPiece);
-            movePiece(lastTouchedPiece, dropCoordinate);
         }
     });
 }

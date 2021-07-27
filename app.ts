@@ -52,6 +52,8 @@ let lastTouchedPiece : Piece;
 
 let whiteKing : Piece; 
 let blackKing : Piece;
+let whiteKingIsChecked : boolean = false;
+let blackKingIsChecked : boolean = false;
 
 
 function initGame() {
@@ -345,10 +347,6 @@ function queenCreator(isWhite : boolean, currentPosition : Coordinate) {
     Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
 }
 
-
-
-
-
 function drawBoard() {    
     for (let row = 0; row < 8; row++) {
         for (let col = 0; col < 8; col++) {
@@ -411,7 +409,7 @@ function drawVisualCell(piece : Piece) {
 
 function movePiece(piece : Piece, destination : Coordinate) {
     let formerCoordinates = piece.CurrentPosition;
-    removeVisualCell(piece.CurrentPosition);
+    removeVisualCell(formerCoordinates);
     destroyPiece(destination);
     updatePiecePosition(piece, destination);
     drawVisualCell(piece);
@@ -421,6 +419,29 @@ function movePiece(piece : Piece, destination : Coordinate) {
     // console.log(`Moved ${piece.Name} at (${formerCoordinates.X},${formerCoordinates.Y}) -> (${piece.CurrentPosition.X},${piece.CurrentPosition.Y})`);
 
 }
+
+function moveIsIllegal(piece : Piece, destination : Coordinate) {
+    let formerCoordinates = piece.CurrentPosition;
+    let destinationPiece = Board[destination.X][destination.Y];
+    unhighlightLegalMoves(piece);
+
+    updatePiecePosition(piece, destination)
+    updateAllLegalMovesAndFindChecks();
+    let kingGetsChecked : boolean = false;
+    if (piece.IsWhite && whiteKingIsChecked) kingGetsChecked = true;
+    if (piece.IsWhite === false && blackKingIsChecked) kingGetsChecked = true;
+
+    // Revert board to former state
+    updatePiecePosition(piece, formerCoordinates);
+    updateLegalMoves(piece);
+    if (destinationPiece !== undefined) updatePiecePosition(destinationPiece, destinationPiece.CurrentPosition);
+
+
+    console.log(`moveIsIllegal : ${kingGetsChecked}`);
+    drawBoard();
+    return kingGetsChecked;
+}
+
 function updateLegalMoves(piece : Piece) {
     piece.LegalMoves = [];
     for (let i = 0; i < piece.Moves.length; i++) {
@@ -443,10 +464,8 @@ function unhighlightLegalMoves(piece : Piece) {
 }
 
 function updateAllLegalMovesAndFindChecks() {
-    // kolla om alla pjäsen är MOTSATT till kungens färg.
-    let whiteKingIsChecked : boolean = false;
-    let blackKingIsChecked : boolean = false;
-
+    whiteKingIsChecked = false;
+    blackKingIsChecked = false;
 
     for (let y = 0; y <= 7; y++) {
        for (let x = 0; x <= 7; x++) {
@@ -455,19 +474,15 @@ function updateAllLegalMovesAndFindChecks() {
             let opponentKing : Piece = Board[x][y]!.IsWhite ? blackKing : whiteKing;
             Board[x][y]!.LegalMoves.forEach(legalMove => {
                 if (legalMove.X === opponentKing.CurrentPosition.X && legalMove.Y === opponentKing.CurrentPosition.Y) {
-                    console.log(`CHECKED!!!`);
+                    if (Board[x][y]?.IsWhite) blackKingIsChecked = true;
+                    else whiteKingIsChecked = true; 
                 }
             });
        }
     }
 
-    console.log(`done with finding checks....`);
-    
-    return {
-        blackKingIsChecked,
-        whiteKingIsChecked
-    }
 }
+
 
 function makePieceDraggable() {
     document.addEventListener("dragstart", (e) => {
@@ -477,6 +492,7 @@ function makePieceDraggable() {
         let piece : Piece | undefined = Board[colIndex][rowIndex];
         if (piece == undefined) return;
         if (piece.IsWhite === isWhiteTurn) {
+            updateLegalMoves(piece);
             highlightLegalMoves(piece);
             lastTouchedPiece = piece;
         }
@@ -516,8 +532,12 @@ function makeCellsLandable() {
             let target = e.target.className.includes("legalMove") ? e.target : e.target.parentElement; 
             let dropCoordinate : Coordinate = getCoordinateFromElement(target)
 
+            if (moveIsIllegal(lastTouchedPiece, dropCoordinate) === false) {
+                console.log(`moved piece!!`);
+                movePiece(lastTouchedPiece, dropCoordinate);
+            }
+
             unhighlightLegalMoves(lastTouchedPiece);
-            movePiece(lastTouchedPiece, dropCoordinate);
         }
     })
 }
