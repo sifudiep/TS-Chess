@@ -441,7 +441,6 @@ function movePiece(piece, destination) {
         }
         if (Board[destination.X][destination.Y] === undefined) {
             var behindDestination = piece.IsWhite ? destination.Y - 1 : destination.Y + 1;
-            console.log("");
             if (Board[destination.X][behindDestination] !== undefined &&
                 ((_a = Board[destination.X][behindDestination]) === null || _a === void 0 ? void 0 : _a.Name) === "Pawn" &&
                 ((_b = Board[destination.X][behindDestination]) === null || _b === void 0 ? void 0 : _b.IsWhite) !== piece.IsWhite) {
@@ -530,7 +529,7 @@ function makePieceDraggable() {
         var piece = Board[colIndex][rowIndex];
         if (piece == undefined)
             return;
-        if (piece.IsWhite === isWhiteTurn || true) {
+        if (piece.IsWhite === isWhiteTurn) {
             updateLegalMoves(piece);
             highlightLegalMoves(piece);
             lastTouchedPiece = piece;

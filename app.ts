@@ -582,7 +582,7 @@ function makePieceDraggable() {
 
         let piece : Piece | undefined = Board[colIndex][rowIndex];
         if (piece == undefined) return;
-        if (piece.IsWhite === isWhiteTurn || true) {
+        if (piece.IsWhite === isWhiteTurn) {
             updateLegalMoves(piece);
             highlightLegalMoves(piece);
             lastTouchedPiece = piece;
