@@ -57,8 +57,18 @@ function initGame() {
     makeCellsLandable();
     updateAllLegalMovesAndFindChecks();
 }
+function updatePieceJustMoved() {
+    for (var y = 0; y <= 7; y++) {
+        for (var x = 0; x <= 7; x++) {
+            var boardElement = Board[x][y];
+            if (boardElement !== undefined && boardElement.Name === "Pawn" && boardElement.JustMadeFirstMove) {
+                boardElement.JustMadeFirstMove = false;
+            }
+        }
+    }
+}
 function moveLikePawn(self) {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r;
     // auto promoting into queen
     if (self.CurrentPosition.Y == 0 || self.CurrentPosition.Y == 7) {
         var coordinate = self.CurrentPosition;
@@ -88,18 +98,32 @@ function moveLikePawn(self) {
                 self.LegalMoves.push(new coordinate_js_1.Coordinate(self.CurrentPosition.X, self.CurrentPosition.Y + 2));
             }
         }
+        if (self.CurrentPosition.X + 1 <= 7 &&
+            Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y] !== undefined &&
+            ((_c = Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y]) === null || _c === void 0 ? void 0 : _c.Name) === "Pawn" &&
+            ((_d = Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y]) === null || _d === void 0 ? void 0 : _d.JustMadeFirstMove) &&
+            ((_e = Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y]) === null || _e === void 0 ? void 0 : _e.IsWhite) !== self.IsWhite) {
+            self.LegalMoves.push(new coordinate_js_1.Coordinate(self.CurrentPosition.X + 1, self.CurrentPosition.Y + 1));
+        }
+        if (self.CurrentPosition.X - 1 >= 0 &&
+            Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y] !== undefined &&
+            ((_f = Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y]) === null || _f === void 0 ? void 0 : _f.Name) === "Pawn" &&
+            ((_g = Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y]) === null || _g === void 0 ? void 0 : _g.JustMadeFirstMove) &&
+            ((_h = Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y]) === null || _h === void 0 ? void 0 : _h.IsWhite) !== self.IsWhite) {
+            self.LegalMoves.push(new coordinate_js_1.Coordinate(self.CurrentPosition.X - 1, self.CurrentPosition.Y + 1));
+        }
     }
     else {
         if (self.CurrentPosition.X - 1 >= 0) {
             if (Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y - 1] !== undefined) {
-                if (((_c = Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y - 1]) === null || _c === void 0 ? void 0 : _c.IsWhite) === true) {
+                if (((_j = Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y - 1]) === null || _j === void 0 ? void 0 : _j.IsWhite) === true) {
                     self.LegalMoves.push(new coordinate_js_1.Coordinate(self.CurrentPosition.X - 1, self.CurrentPosition.Y - 1));
                 }
             }
         }
         if (self.CurrentPosition.X + 1 <= 7) {
             if (Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y - 1] !== undefined) {
-                if (((_d = Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y - 1]) === null || _d === void 0 ? void 0 : _d.IsWhite) === true) {
+                if (((_k = Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y - 1]) === null || _k === void 0 ? void 0 : _k.IsWhite) === true) {
                     self.LegalMoves.push(new coordinate_js_1.Coordinate(self.CurrentPosition.X + 1, self.CurrentPosition.Y - 1));
                 }
             }
@@ -109,6 +133,20 @@ function moveLikePawn(self) {
             if (Board[self.CurrentPosition.X][self.CurrentPosition.Y - 2] === undefined && self.HasBeenMoved === false) {
                 self.LegalMoves.push(new coordinate_js_1.Coordinate(self.CurrentPosition.X, self.CurrentPosition.Y - 2));
             }
+        }
+        if (self.CurrentPosition.X + 1 <= 7 &&
+            Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y] !== undefined &&
+            ((_l = Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y]) === null || _l === void 0 ? void 0 : _l.Name) === "Pawn" &&
+            ((_m = Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y]) === null || _m === void 0 ? void 0 : _m.JustMadeFirstMove) &&
+            ((_o = Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y]) === null || _o === void 0 ? void 0 : _o.IsWhite) !== self.IsWhite) {
+            self.LegalMoves.push(new coordinate_js_1.Coordinate(self.CurrentPosition.X + 1, self.CurrentPosition.Y - 1));
+        }
+        if (self.CurrentPosition.X - 1 >= 0 &&
+            Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y] !== undefined &&
+            ((_p = Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y]) === null || _p === void 0 ? void 0 : _p.Name) === "Pawn" &&
+            ((_q = Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y]) === null || _q === void 0 ? void 0 : _q.JustMadeFirstMove) &&
+            ((_r = Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y]) === null || _r === void 0 ? void 0 : _r.IsWhite) !== self.IsWhite) {
+            self.LegalMoves.push(new coordinate_js_1.Coordinate(self.CurrentPosition.X - 1, self.CurrentPosition.Y - 1));
         }
     }
 }
@@ -372,6 +410,7 @@ function drawVisualCell(piece) {
     visualCell.appendChild(visualCellImgBackground);
 }
 function movePiece(piece, destination) {
+    var _a, _b;
     // Castling
     if (piece.Name === "King") {
         var xDifference = piece.CurrentPosition.X - destination.X;
@@ -392,6 +431,21 @@ function movePiece(piece, destination) {
                 }
                 destination.X = 6;
                 movePiece(Board[7][piece.CurrentPosition.Y], new coordinate_js_1.Coordinate(5, piece.CurrentPosition.Y));
+            }
+        }
+    }
+    // destroy piece enpassant
+    if (piece.Name === "Pawn") {
+        if (piece.HasBeenMoved === false) {
+            piece.JustMadeFirstMove = true;
+        }
+        if (Board[destination.X][destination.Y] === undefined) {
+            var behindDestination = piece.IsWhite ? destination.Y - 1 : destination.Y + 1;
+            console.log("");
+            if (Board[destination.X][behindDestination] !== undefined &&
+                ((_a = Board[destination.X][behindDestination]) === null || _a === void 0 ? void 0 : _a.Name) === "Pawn" &&
+                ((_b = Board[destination.X][behindDestination]) === null || _b === void 0 ? void 0 : _b.IsWhite) !== piece.IsWhite) {
+                destroyPiece(new coordinate_js_1.Coordinate(destination.X, behindDestination));
             }
         }
     }
@@ -421,7 +475,6 @@ function moveIsIllegal(piece, destination) {
     updateLegalMoves(piece);
     if (destinationPiece !== undefined)
         updatePiecePosition(destinationPiece, destinationPiece.CurrentPosition);
-    console.log("moveIsIllegal : " + kingGetsChecked);
     drawBoard();
     return kingGetsChecked;
 }
@@ -509,9 +562,10 @@ function makeCellsLandable() {
             var target = e.target.className.includes("legalMove") ? e.target : e.target.parentElement;
             var dropCoordinate = getCoordinateFromElement(target);
             if (moveIsIllegal(lastTouchedPiece, dropCoordinate) === false) {
-                console.log("moved piece!!");
+                updatePieceJustMoved();
                 movePiece(lastTouchedPiece, dropCoordinate);
                 lastTouchedPiece.HasBeenMoved = true;
+                drawBoard();
             }
             unhighlightLegalMoves(lastTouchedPiece);
         }

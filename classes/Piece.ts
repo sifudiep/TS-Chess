@@ -9,8 +9,10 @@ export class Piece {
     
     IsWhite : boolean;
     HasBeenMoved : boolean = false;
+    JustMadeFirstMove : boolean = false;
     LegalMoves : Array<Coordinate> = [];
     CurrentPosition : Coordinate;
     Name : String;
     Moves : Array<any> = [];
+
 }

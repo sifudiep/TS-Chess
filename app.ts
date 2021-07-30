@@ -14,7 +14,7 @@ function setupBoardColors() {
         }
         lightColor ? lightColor = false : lightColor = true;
     }
-}
+} 
 
 let isWhiteTurn : boolean = true;
 
@@ -65,6 +65,17 @@ function initGame() {
     updateAllLegalMovesAndFindChecks();
 }
 
+function updatePieceJustMoved() {
+    for (let y = 0; y <= 7; y++) {
+        for (let x = 0; x <= 7; x++) {
+            let boardElement = Board[x][y];
+            if (boardElement !== undefined && boardElement.Name === "Pawn" && boardElement.JustMadeFirstMove) {
+                boardElement.JustMadeFirstMove = false;
+            }
+        }
+    }
+}
+
 
 function moveLikePawn(self : Piece) {
     // auto promoting into queen
@@ -101,6 +112,23 @@ function moveLikePawn(self : Piece) {
                 self.LegalMoves.push(new Coordinate(self.CurrentPosition.X, self.CurrentPosition.Y+2));
             }
         }
+
+        if (self.CurrentPosition.X+1 <= 7 &&
+            Board[self.CurrentPosition.X+1][self.CurrentPosition.Y] !== undefined && 
+            Board[self.CurrentPosition.X+1][self.CurrentPosition.Y]?.Name === "Pawn" && 
+            Board[self.CurrentPosition.X+1][self.CurrentPosition.Y]?.JustMadeFirstMove && 
+            Board[self.CurrentPosition.X+1][self.CurrentPosition.Y]?.IsWhite !== self.IsWhite) {
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X+1, self.CurrentPosition.Y+1));
+        }
+
+        if (self.CurrentPosition.X-1 >= 0 &&
+            Board[self.CurrentPosition.X-1][self.CurrentPosition.Y] !== undefined && 
+            Board[self.CurrentPosition.X-1][self.CurrentPosition.Y]?.Name === "Pawn" && 
+            Board[self.CurrentPosition.X-1][self.CurrentPosition.Y]?.JustMadeFirstMove && 
+            Board[self.CurrentPosition.X-1][self.CurrentPosition.Y]?.IsWhite !== self.IsWhite) {
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X-1, self.CurrentPosition.Y+1));
+        }
+
         
     } else {
         if (self.CurrentPosition.X-1 >= 0) {
@@ -126,6 +154,22 @@ function moveLikePawn(self : Piece) {
                 self.LegalMoves.push(new Coordinate(self.CurrentPosition.X, self.CurrentPosition.Y-2));
             }
         } 
+
+        if (self.CurrentPosition.X+1 <= 7 &&
+            Board[self.CurrentPosition.X+1][self.CurrentPosition.Y] !== undefined && 
+            Board[self.CurrentPosition.X+1][self.CurrentPosition.Y]?.Name === "Pawn" && 
+            Board[self.CurrentPosition.X+1][self.CurrentPosition.Y]?.JustMadeFirstMove && 
+            Board[self.CurrentPosition.X+1][self.CurrentPosition.Y]?.IsWhite !== self.IsWhite) {
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X+1, self.CurrentPosition.Y-1));
+        }
+
+        if (self.CurrentPosition.X-1 >= 0 &&
+            Board[self.CurrentPosition.X-1][self.CurrentPosition.Y] !== undefined && 
+            Board[self.CurrentPosition.X-1][self.CurrentPosition.Y]?.Name === "Pawn" && 
+            Board[self.CurrentPosition.X-1][self.CurrentPosition.Y]?.JustMadeFirstMove && 
+            Board[self.CurrentPosition.X-1][self.CurrentPosition.Y]?.IsWhite !== self.IsWhite) {
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X-1, self.CurrentPosition.Y-1));
+        }
     } 
 
 }
@@ -442,6 +486,21 @@ function movePiece(piece : Piece, destination : Coordinate) {
         }
     }
 
+    // destroy piece enpassant
+    if (piece.Name === "Pawn") {
+        if (piece.HasBeenMoved === false) {
+            piece.JustMadeFirstMove = true;
+        }
+        if (Board[destination.X][destination.Y] === undefined) {
+            let behindDestination = piece.IsWhite ? destination.Y - 1 : destination.Y + 1;
+            if (Board[destination.X][behindDestination] !== undefined && 
+                Board[destination.X][behindDestination]?.Name === "Pawn" && 
+                Board[destination.X][behindDestination]?.IsWhite !== piece.IsWhite) {
+                destroyPiece(new Coordinate(destination.X, behindDestination));
+            }
+        }
+    }
+
     let formerCoordinates = piece.CurrentPosition;
     removeVisualCell(formerCoordinates);
     destroyPiece(destination);
@@ -565,8 +624,10 @@ function makeCellsLandable() {
             let dropCoordinate : Coordinate = getCoordinateFromElement(target)
 
             if (moveIsIllegal(lastTouchedPiece, dropCoordinate) === false) {
+                updatePieceJustMoved();
                 movePiece(lastTouchedPiece, dropCoordinate);
                 lastTouchedPiece.HasBeenMoved = true;
+                drawBoard();
             }
 
             unhighlightLegalMoves(lastTouchedPiece);
