@@ -1,6 +1,10 @@
 import { Piece } from "./classes/piece.js";
 import { Coordinate } from "./classes/coordinate.js";
 
+let moveAudio = new Audio('./sfx/move.wav');
+let checkAudio = new Audio('./sfx/check.wav');
+let errorAudio = new Audio('./sfx/error.wav')
+
 function setupBoardColors() {
     let board = document.getElementById('chessBoard');
     if (board == null) throw Error;
@@ -511,6 +515,11 @@ function movePiece(piece : Piece, destination : Coordinate) {
     updateAllLegalMovesAndFindChecks();
     // console.log(`Moved ${piece.Name} at (${formerCoordinates.X},${formerCoordinates.Y}) -> (${piece.CurrentPosition.X},${piece.CurrentPosition.Y})`);
 
+    if (blackKingIsChecked || whiteKingIsChecked) {
+        checkAudio.play();
+    } else {
+        moveAudio.play();
+    }
 }
 
 function moveIsIllegal(piece : Piece, destination : Coordinate) {
@@ -529,7 +538,10 @@ function moveIsIllegal(piece : Piece, destination : Coordinate) {
     updateLegalMoves(piece);
     if (destinationPiece !== undefined) updatePiecePosition(destinationPiece, destinationPiece.CurrentPosition);
 
-    drawBoard();
+    if (kingGetsChecked) {
+        errorAudio.play();
+    }
+
     return kingGetsChecked;
 }
 

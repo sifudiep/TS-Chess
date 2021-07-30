@@ -2,6 +2,9 @@
 exports.__esModule = true;
 var piece_js_1 = require("./classes/piece.js");
 var coordinate_js_1 = require("./classes/coordinate.js");
+var moveAudio = new Audio('./sfx/move.wav');
+var checkAudio = new Audio('./sfx/check.wav');
+var errorAudio = new Audio('./sfx/error.wav');
 function setupBoardColors() {
     var board = document.getElementById('chessBoard');
     if (board == null)
@@ -457,6 +460,12 @@ function movePiece(piece, destination) {
     isWhiteTurn = !isWhiteTurn;
     updateAllLegalMovesAndFindChecks();
     // console.log(`Moved ${piece.Name} at (${formerCoordinates.X},${formerCoordinates.Y}) -> (${piece.CurrentPosition.X},${piece.CurrentPosition.Y})`);
+    if (blackKingIsChecked || whiteKingIsChecked) {
+        checkAudio.play();
+    }
+    else {
+        moveAudio.play();
+    }
 }
 function moveIsIllegal(piece, destination) {
     var formerCoordinates = piece.CurrentPosition;
@@ -474,7 +483,9 @@ function moveIsIllegal(piece, destination) {
     updateLegalMoves(piece);
     if (destinationPiece !== undefined)
         updatePiecePosition(destinationPiece, destinationPiece.CurrentPosition);
-    drawBoard();
+    if (kingGetsChecked) {
+        errorAudio.play();
+    }
     return kingGetsChecked;
 }
 function updateLegalMoves(piece) {
