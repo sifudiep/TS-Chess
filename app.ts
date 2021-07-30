@@ -476,13 +476,19 @@ function movePiece(piece : Piece, destination : Coordinate) {
             // Castle LEFT
             if (xDifference > 0) {
                 for (let i = 3; i >= 2; i--) {
-                    if (moveIsIllegal(piece, new Coordinate(i, piece.CurrentPosition.Y))) return
+                    if (moveIsIllegal(piece, new Coordinate(i, piece.CurrentPosition.Y))) {
+                        isWhiteTurn = !isWhiteTurn;
+                        return
+                    }
                 }
                 destination.X = 2;
                 movePiece(Board[0][piece.CurrentPosition.Y]!, new Coordinate(3, piece.CurrentPosition.Y));
             } else { // Castle RIGHT
                 for (let i = 5; i <= 6; i++) {
-                    if (moveIsIllegal(piece, new Coordinate(i, piece.CurrentPosition.Y))) return
+                    if (moveIsIllegal(piece, new Coordinate(i, piece.CurrentPosition.Y))) {
+                        isWhiteTurn = !isWhiteTurn;
+                        return
+                    }
                 }
                 destination.X = 6;
                 movePiece(Board[7][piece.CurrentPosition.Y]!, new Coordinate(5, piece.CurrentPosition.Y));
