@@ -59,6 +59,7 @@ function initGame() {
     makePieceDraggable();
     makeCellsLandable();
     updateAllLegalMovesAndFindChecks();
+    listenToTextInput();
 }
 function updatePieceJustMoved() {
     for (var y = 0; y <= 7; y++) {
@@ -412,6 +413,47 @@ function drawVisualCell(piece) {
     visualCellImgBackground.setAttribute("draggable", "true");
     visualCell.appendChild(visualCellImgBackground);
 }
+function movePieceByText(textInput) {
+    var firstCoordinate = translateTextToCoordinate(textInput.substring(0, 2));
+    var secondCoordinate = translateTextToCoordinate(textInput.substring(2, 4));
+    var piece = Board[firstCoordinate.X][firstCoordinate.Y];
+    if (piece !== undefined) {
+        movePiece(piece, secondCoordinate);
+    }
+}
+function translateTextToCoordinate(textCoordinate) {
+    var x = -1;
+    var y = parseInt(textCoordinate[1]) - 1;
+    if (textCoordinate.length === 2) {
+        switch (textCoordinate[0]) {
+            case 'a':
+                x = 0;
+                break;
+            case 'b':
+                x = 1;
+                break;
+            case 'c':
+                x = 2;
+                break;
+            case 'd':
+                x = 3;
+                break;
+            case 'e':
+                x = 4;
+                break;
+            case 'f':
+                x = 5;
+                break;
+            case 'g':
+                x = 6;
+                break;
+            case 'h':
+                x = 7;
+                break;
+        }
+    }
+    return new coordinate_js_1.Coordinate(x, y);
+}
 function movePiece(piece, destination) {
     var _a, _b;
     // Castling
@@ -421,16 +463,20 @@ function movePiece(piece, destination) {
             // Castle LEFT
             if (xDifference > 0) {
                 for (var i = 3; i >= 2; i--) {
-                    if (moveIsIllegal(piece, new coordinate_js_1.Coordinate(i, piece.CurrentPosition.Y)))
+                    if (moveIsIllegal(piece, new coordinate_js_1.Coordinate(i, piece.CurrentPosition.Y))) {
+                        isWhiteTurn = !isWhiteTurn;
                         return;
+                    }
                 }
                 destination.X = 2;
                 movePiece(Board[0][piece.CurrentPosition.Y], new coordinate_js_1.Coordinate(3, piece.CurrentPosition.Y));
             }
             else { // Castle RIGHT
                 for (var i = 5; i <= 6; i++) {
-                    if (moveIsIllegal(piece, new coordinate_js_1.Coordinate(i, piece.CurrentPosition.Y)))
+                    if (moveIsIllegal(piece, new coordinate_js_1.Coordinate(i, piece.CurrentPosition.Y))) {
+                        isWhiteTurn = !isWhiteTurn;
                         return;
+                    }
                 }
                 destination.X = 6;
                 movePiece(Board[7][piece.CurrentPosition.Y], new coordinate_js_1.Coordinate(5, piece.CurrentPosition.Y));
@@ -578,6 +624,20 @@ function makeCellsLandable() {
                 drawBoard();
             }
             unhighlightLegalMoves(lastTouchedPiece);
+        }
+    });
+}
+function listenToTextInput() {
+    document.addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+            var input = document.querySelector('input');
+            if (input !== null) {
+                var text = input === null || input === void 0 ? void 0 : input.value;
+                if (text !== undefined) {
+                    movePieceByText(text);
+                }
+            }
+            input.value = "";
         }
     });
 }

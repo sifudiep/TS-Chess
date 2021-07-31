@@ -1,4 +1,4 @@
-import { Coordinate } from "./coordinate.js";
+import { Coordinate } from "./Coordinate.js";
 
 export class Piece {
     constructor(IsWhite : boolean, CurrentPosition : Coordinate, Name : String) {

@@ -1,5 +1,5 @@
-import { Piece } from "./classes/piece.js";
-import { Coordinate } from "./classes/coordinate.js";
+import { Piece } from "./classes/Piece.js";
+import { Coordinate } from "./classes/Coordinate.js";
 
 let moveAudio = new Audio('./sfx/move.wav');
 let checkAudio = new Audio('./sfx/check.wav');
@@ -67,6 +67,7 @@ function initGame() {
     makePieceDraggable();
     makeCellsLandable();
     updateAllLegalMovesAndFindChecks();
+    listenToTextInput();
 }
 
 function updatePieceJustMoved() {
@@ -468,6 +469,54 @@ function drawVisualCell(piece : Piece) {
     visualCell.appendChild(visualCellImgBackground);    
 }
 
+function movePieceByText(textInput : string) {
+    let firstCoordinate : Coordinate = translateTextToCoordinate(textInput.substring(0,2));
+    let secondCoordinate : Coordinate = translateTextToCoordinate(textInput.substring(2,4));
+
+    let piece = Board[firstCoordinate.X][firstCoordinate.Y];
+
+    if (piece !== undefined) {
+        movePiece(piece, secondCoordinate);
+    }
+    
+}
+
+function translateTextToCoordinate(textCoordinate : string) {
+    let x : number = -1;
+    let y : number = parseInt(textCoordinate[1]) - 1;
+
+    if (textCoordinate.length === 2) {
+        switch (textCoordinate[0]) {
+            case 'a':
+                x = 0;
+                break;
+            case 'b':
+                x = 1;
+                break;
+            case 'c':
+                x = 2;
+                break;
+            case 'd':
+                x = 3;
+                break;
+            case 'e':
+                x = 4;
+                break;
+            case 'f':
+                x = 5;
+                break;
+            case 'g':
+                x = 6;
+                break;
+            case 'h':
+                x = 7;
+                break;
+        }
+    }
+            
+    return new Coordinate(x, y);
+}
+
 function movePiece(piece : Piece, destination : Coordinate) {
     // Castling
     if (piece.Name === "King") {
@@ -477,7 +526,6 @@ function movePiece(piece : Piece, destination : Coordinate) {
             if (xDifference > 0) {
                 for (let i = 3; i >= 2; i--) {
                     if (moveIsIllegal(piece, new Coordinate(i, piece.CurrentPosition.Y))) {
-                        isWhiteTurn = !isWhiteTurn;
                         return
                     }
                 }
@@ -486,7 +534,6 @@ function movePiece(piece : Piece, destination : Coordinate) {
             } else { // Castle RIGHT
                 for (let i = 5; i <= 6; i++) {
                     if (moveIsIllegal(piece, new Coordinate(i, piece.CurrentPosition.Y))) {
-                        isWhiteTurn = !isWhiteTurn;
                         return
                     }
                 }
@@ -517,7 +564,6 @@ function movePiece(piece : Piece, destination : Coordinate) {
     updatePiecePosition(piece, destination);
     drawVisualCell(piece);
     Board[formerCoordinates.X][formerCoordinates.Y] = undefined;
-    isWhiteTurn = !isWhiteTurn;
     updateAllLegalMovesAndFindChecks();
     // console.log(`Moved ${piece.Name} at (${formerCoordinates.X},${formerCoordinates.Y}) -> (${piece.CurrentPosition.X},${piece.CurrentPosition.Y})`);
 
@@ -594,7 +640,7 @@ function updateAllLegalMovesAndFindChecks() {
 
 
 function makePieceDraggable() {
-    document.addEventListener("dragstart", (e) => {
+    document.addEventListener("dragstart", (e : any) => {
         let colIndex = parseInt(e.path[1].id.replace("col-", "")) - 1;
         let rowIndex = parseInt(e.path[1].getAttribute("row")!) - 1;
 
@@ -612,7 +658,7 @@ function makePieceDraggable() {
 
 //     // });
 
-    document.addEventListener("dragend", (e) => {
+    document.addEventListener("dragend", (e : any) => {
         let colIndex = parseInt(e.path[1].id.replace("col-", "")) - 1;
         let rowIndex = parseInt(e.path[1].getAttribute("row")!) - 1;
 
@@ -644,6 +690,7 @@ function makeCellsLandable() {
             if (moveIsIllegal(lastTouchedPiece, dropCoordinate) === false) {
                 updatePieceJustMoved();
                 movePiece(lastTouchedPiece, dropCoordinate);
+                isWhiteTurn = !isWhiteTurn;
                 lastTouchedPiece.HasBeenMoved = true;
                 drawBoard();
             }
@@ -651,6 +698,23 @@ function makeCellsLandable() {
             unhighlightLegalMoves(lastTouchedPiece);
         }
     })
+}
+
+function listenToTextInput() {
+    document.addEventListener("keypress", e => {
+        if (e.key === "Enter") {
+            let input = document.querySelector('input');
+
+            if (input !== null) {
+                let text = input?.value;
+                if (text !== undefined) {
+                    movePieceByText(text);
+                }
+            }
+
+            input!.value = "";
+        }
+    }); 
 }
 
 function getCoordinateFromElement(element : any) {
