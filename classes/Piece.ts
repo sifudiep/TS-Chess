@@ -1,13 +1,14 @@
 import { Coordinate } from "./Coordinate.js";
+import { PieceColor } from "../enum/PieceColor.js";
 
 export class Piece {
-    constructor(IsWhite : boolean, CurrentPosition : Coordinate, Name : String) {
-        this.IsWhite = IsWhite;
+    constructor(color : PieceColor, CurrentPosition : Coordinate, Name : String) {
+        this.Color = color;
         this.CurrentPosition = CurrentPosition;
         this.Name = Name
     }
     
-    IsWhite : boolean;
+    Color : PieceColor;
     HasBeenMoved : boolean = false;
     JustMadeFirstMove : boolean = false;
     LegalMoves : Array<Coordinate> = [];
