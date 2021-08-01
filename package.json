@@ -6,7 +6,7 @@
   "scripts": {
     "build": "webpack",
     "start-dev": "lite-server",
-    "start": "node server/server.js"
+    "start": "node server.js"
   },
   "author": "",
   "license": "ISC",
