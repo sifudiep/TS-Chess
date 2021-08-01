@@ -2,10 +2,11 @@
   "name": "typescript-tutorial",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "dist/main.js",
   "scripts": {
     "build": "webpack",
-    "start": "lite-server"
+    "start-dev": "lite-server",
+    "start": "node server/server.js"
   },
   "author": "",
   "license": "ISC",
