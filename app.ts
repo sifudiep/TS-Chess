@@ -609,21 +609,16 @@ function movePiece(piece : Piece, destination : Coordinate) {
 
 function changeTurn() {
     if (turn === PieceColor.White) {
-        console.log(`white`);
         turn = PieceColor.Black;
     } else if (turn === PieceColor.Black) {
-        console.log(`black`);
         turn = PieceColor.White;
     }
-
-    console.log(`Turn is : ${turn}`);
 }
 
 function moveIsIllegal(piece : Piece, destination : Coordinate) {
     let formerCoordinates = piece.CurrentPosition;
     let destinationPiece = Board[destination.X][destination.Y];
     unhighlightLegalMoves(piece);
-
     updatePiecePosition(piece, destination)
     updateAllLegalMovesAndFindChecks();
     let kingGetsChecked : boolean = false;
@@ -671,9 +666,10 @@ function updateAllLegalMovesAndFindChecks() {
        for (let x = 0; x <= 7; x++) {
             if (Board[x][y] === undefined) continue;
             updateLegalMoves(Board[x][y]!);
-            let opponentKing : Piece = Board[x][y]!.Color === PieceColor.Black ? blackKing : whiteKing;
+            let opponentKing : Piece = Board[x][y]!.Color === PieceColor.White ? blackKing : whiteKing;
             Board[x][y]!.LegalMoves.forEach(legalMove => {
                 if (legalMove.X === opponentKing.CurrentPosition.X && legalMove.Y === opponentKing.CurrentPosition.Y) {
+                    console.log(`ChECK!`);
                     if (Board[x][y]?.Color === PieceColor.White) blackKingIsChecked = true;
                     else whiteKingIsChecked = true; 
                 }
