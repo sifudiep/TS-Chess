@@ -5,7 +5,7 @@ import { PieceColor } from "./enum/PieceColor.js";
 
 const io = require("socket.io-client");
 
-const socket = io("./");
+const socket = io("https://sifudiep-ts-chess.herokuapp.com/");
 
 let moveAudio = new Audio('./sfx/move.wav');
 let checkAudio = new Audio('./sfx/check.wav');
