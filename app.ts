@@ -6,8 +6,8 @@ import { ConnectionData } from "./interface/ConnectionData.js";
 
 const io = require("socket.io-client");
 
-// const socket = io("https://sifudiep-ts-chess.herokuapp.com/");
-const socket = io("ws://localhost:3000")
+const socket = io("https://sifudiep-ts-chess.herokuapp.com/");
+// const socket = io("ws://localhost:3000")
 
 let moveAudio = new Audio('./sfx/move.wav');
 let checkAudio = new Audio('./sfx/check.wav');
@@ -87,10 +87,10 @@ function setupDefaultBoardPieces() {
     }
     rookCreator(PieceColor.White, new Coordinate(0,0)); 
     rookCreator(PieceColor.White, new Coordinate(7,0)); 
-    // knightCreator(PieceColor.White, new Coordinate(1,0));
-    // knightCreator(PieceColor.White, new Coordinate(6,0));
-    // bishopCreator(PieceColor.White, new Coordinate(2,0));
-    // bishopCreator(PieceColor.White, new Coordinate(5,0));
+    knightCreator(PieceColor.White, new Coordinate(1,0));
+    knightCreator(PieceColor.White, new Coordinate(6,0));
+    bishopCreator(PieceColor.White, new Coordinate(2,0));
+    bishopCreator(PieceColor.White, new Coordinate(5,0));
     kingCreator(PieceColor.White, new Coordinate(4,0));
     queenCreator(PieceColor.White, new Coordinate(3,0));
 
@@ -100,10 +100,10 @@ function setupDefaultBoardPieces() {
     }
     rookCreator(PieceColor.Black, new Coordinate(0,7)); 
     rookCreator(PieceColor.Black, new Coordinate(7,7)); 
-    // knightCreator(PieceColor.Black, new Coordinate(1,7));
-    // knightCreator(PieceColor.Black, new Coordinate(6,7));
-    // bishopCreator(PieceColor.Black, new Coordinate(2,7));
-    // bishopCreator(PieceColor.Black, new Coordinate(5,7));
+    knightCreator(PieceColor.Black, new Coordinate(1,7));
+    knightCreator(PieceColor.Black, new Coordinate(6,7));
+    bishopCreator(PieceColor.Black, new Coordinate(2,7));
+    bishopCreator(PieceColor.Black, new Coordinate(5,7));
     kingCreator(PieceColor.Black, new Coordinate(4,7));
     queenCreator(PieceColor.Black, new Coordinate(3,7));
 }
@@ -120,11 +120,11 @@ function initGame() {
     drawPlayerName();
 }
 
-function updatePieceJustMoved() {
+function updatePieceJustMoved(color : PieceColor) {
     for (let y = 0; y <= 7; y++) {
         for (let x = 0; x <= 7; x++) {
             let boardElement = Board[x][y];
-            if (boardElement !== undefined && boardElement.Name === "Pawn" && boardElement.JustMadeFirstMove) {
+            if (boardElement !== undefined && boardElement.Name === "Pawn" && boardElement.JustMadeFirstMove && boardElement.Color === color) {
                 boardElement.JustMadeFirstMove = false;
             }
         }
@@ -533,6 +533,12 @@ function movePieceByText(textInput : string) {
     }
 
     if (piece !== undefined) {
+        updatePieceJustMoved(turn);
+
+        if (piece.Name === "Pawn" && piece.HasBeenMoved === false) {
+            piece.JustMadeFirstMove = true;
+        }
+
         let formerCoordinates = piece.CurrentPosition;
         removeVisualCell(formerCoordinates);
         destroyPiece(secondCoordinate);
@@ -541,12 +547,14 @@ function movePieceByText(textInput : string) {
         Board[formerCoordinates.X][formerCoordinates.Y] = undefined;
         updateAllLegalMovesAndFindChecks();
         changeTurn();
-    
+        piece.HasBeenMoved = true;
+
         if (blackKingIsChecked || whiteKingIsChecked) {
             checkAudio.play();
         } else {
             moveAudio.play();
         }
+
     }
 }
 
@@ -600,6 +608,8 @@ function translateCoordinateToText(start : Coordinate, end : Coordinate) {
 
 function movePiece(piece : Piece, destination : Coordinate) {
     // Castling
+    updatePieceJustMoved(turn);
+
     if (piece.Name === "King") {
         let xDifference = piece.CurrentPosition.X - destination.X;
         if (Math.abs(xDifference) > 1) {
@@ -647,12 +657,14 @@ function movePiece(piece : Piece, destination : Coordinate) {
     Board[formerCoordinates.X][formerCoordinates.Y] = undefined;
     updateAllLegalMovesAndFindChecks();
     changeTurn();
+    piece.HasBeenMoved = true;
 
     if (blackKingIsChecked || whiteKingIsChecked) {
         checkAudio.play();
     } else {
         moveAudio.play();
     }
+
 
     let data : MoveData = <MoveData>{};
     data.coordinate = translateCoordinateToText(formerCoordinates, destination);
@@ -736,16 +748,19 @@ function updateAllLegalMovesAndFindChecks() {
 
 function makePieceDraggable() {
     document.addEventListener("dragstart", (e : any) => {
-        if (isPlayer === false) return;
+        // if (isPlayer === false) return;
         let colIndex = parseInt(e.path[1].id.replace("col-", "")) - 1;
         let rowIndex = parseInt(e.path[1].getAttribute("row")!) - 1;
 
         let piece : Piece | undefined = Board[colIndex][rowIndex];
         if (piece == undefined) return;
 
+        console.log(piece);
+
         if (piece.Color === turn) {
             if (playerColor === piece.Color || playerColor === PieceColor.None) {
                 updateLegalMoves(piece);
+                console.log(`Updating legalmoves for : ${piece.Name}`);
                 highlightLegalMoves(piece);
                 lastTouchedPiece = piece;
             }
@@ -787,10 +802,7 @@ function makeCellsLandable() {
             let dropCoordinate : Coordinate = getCoordinateFromElement(target)
 
             if (moveIsIllegal(lastTouchedPiece, dropCoordinate) === false) {
-                updatePieceJustMoved();
                 movePiece(lastTouchedPiece, dropCoordinate);
-                lastTouchedPiece.HasBeenMoved = true;
-
                 if (playerColor === PieceColor.None) {
                     playerColor = lastTouchedPiece.Color;
                 }
