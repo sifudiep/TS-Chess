@@ -47,7 +47,6 @@ function setupBoardColors() {
 
 function connectToGame() {
     socket.emit('connect-player', isPlayer);
-    console.log("connecting to game...")
 
     socket.on('success-connect', (data : ConnectionData) => {
         isPlayer = data.isPlayer;
@@ -55,7 +54,6 @@ function connectToGame() {
             playerName = data.playerName
         }
         drawPlayerName();
-        console.log(`playerName : ${playerName}, isPlayer : ${isPlayer}`);
     }) 
 
     socket.on("get-board", (data : any) => {
@@ -528,10 +526,6 @@ function movePieceByText(textInput : string) {
 
     let piece = Board[firstCoordinate.X][firstCoordinate.Y];
 
-    if (piece === undefined) {
-        console.log(piece);
-    }
-
     if (piece !== undefined) {
         updatePieceJustMoved(turn);
 
@@ -748,19 +742,16 @@ function updateAllLegalMovesAndFindChecks() {
 
 function makePieceDraggable() {
     document.addEventListener("dragstart", (e : any) => {
-        // if (isPlayer === false) return;
+        if (isPlayer === false) return;
         let colIndex = parseInt(e.path[1].id.replace("col-", "")) - 1;
         let rowIndex = parseInt(e.path[1].getAttribute("row")!) - 1;
 
         let piece : Piece | undefined = Board[colIndex][rowIndex];
         if (piece == undefined) return;
 
-        console.log(piece);
-
         if (piece.Color === turn) {
             if (playerColor === piece.Color || playerColor === PieceColor.None) {
                 updateLegalMoves(piece);
-                console.log(`Updating legalmoves for : ${piece.Name}`);
                 highlightLegalMoves(piece);
                 lastTouchedPiece = piece;
             }
