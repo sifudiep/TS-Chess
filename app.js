@@ -4,7 +4,8 @@ var Piece_js_1 = require("./classes/Piece.js");
 var Coordinate_js_1 = require("./classes/Coordinate.js");
 var PieceColor_js_1 = require("./enum/PieceColor.js");
 var io = require("socket.io-client");
-var socket = io("ws://localhost:8080");
+// const socket = io("https://sifudiep-ts-chess.herokuapp.com/");
+var socket = io("ws://localhost:3000");
 var moveAudio = new Audio('./sfx/move.wav');
 var checkAudio = new Audio('./sfx/check.wav');
 var errorAudio = new Audio('./sfx/error.wav');
@@ -24,6 +25,24 @@ function setupBoardColors() {
 }
 var turn = PieceColor_js_1.PieceColor.White;
 var playerColor = PieceColor_js_1.PieceColor.None;
+var isPlayer = false;
+var playerName = "Spectator";
+function connectToGame() {
+    socket.emit('connect-player', isPlayer);
+    console.log("connecting to game...");
+    socket.on('success-connect', function (data) {
+        isPlayer = data.isPlayer;
+        playerName = data.playerName;
+        console.log("playerName : " + playerName + ", isPlayer : " + isPlayer);
+    });
+}
+function detectMultiplayerMove() {
+    socket.on('move', function (data) {
+        console.log("move : " + data.coordinate);
+        movePieceByText(data.coordinate);
+        turn = data.turn;
+    });
+}
 function setupDefaultBoardPieces() {
     // White pieces...
     for (var i = 0; i < 8; i++) {
@@ -64,6 +83,7 @@ function initGame() {
     makeCellsLandable();
     updateAllLegalMovesAndFindChecks();
     detectMultiplayerMove();
+    connectToGame();
 }
 function updatePieceJustMoved() {
     for (var y = 0; y <= 7; y++) {
@@ -471,14 +491,6 @@ function translateCoordinateToText(start, end) {
     text += end.Y + 1;
     return text;
 }
-function detectMultiplayerMove() {
-    socket.on('move', function (data) {
-        console.log("move : " + data.coordinate);
-        movePieceByText(data.coordinate);
-        turn = data.turn;
-        console.log("changed turn to : " + data.turn);
-    });
-}
 function movePiece(piece, destination) {
     var _a, _b;
     // Castling
@@ -543,10 +555,9 @@ function changeTurn() {
     if (turn === PieceColor_js_1.PieceColor.White) {
         turn = PieceColor_js_1.PieceColor.Black;
     }
-    if (turn === PieceColor_js_1.PieceColor.Black) {
+    else if (turn === PieceColor_js_1.PieceColor.Black) {
         turn = PieceColor_js_1.PieceColor.White;
     }
-    console.log("Turn is : " + turn);
 }
 function moveIsIllegal(piece, destination) {
     var formerCoordinates = piece.CurrentPosition;
@@ -595,10 +606,11 @@ function updateAllLegalMovesAndFindChecks() {
             if (Board[x][y] === undefined)
                 return "continue";
             updateLegalMoves(Board[x][y]);
-            var opponentKing = Board[x][y].Color === PieceColor_js_1.PieceColor.Black ? blackKing : whiteKing;
+            var opponentKing = Board[x][y].Color === PieceColor_js_1.PieceColor.White ? blackKing : whiteKing;
             Board[x][y].LegalMoves.forEach(function (legalMove) {
                 var _a;
                 if (legalMove.X === opponentKing.CurrentPosition.X && legalMove.Y === opponentKing.CurrentPosition.Y) {
+                    console.log("ChECK!");
                     if (((_a = Board[x][y]) === null || _a === void 0 ? void 0 : _a.Color) === PieceColor_js_1.PieceColor.White)
                         blackKingIsChecked = true;
                     else

@@ -2,14 +2,16 @@ import { Piece } from "./classes/Piece.js";
 import { Coordinate } from "./classes/Coordinate.js";
 import { MoveData } from "./interface/MoveData.js";
 import { PieceColor } from "./enum/PieceColor.js";
+import { ConnectionData } from "./interface/ConnectionData.js";
 
 const io = require("socket.io-client");
 
 const socket = io("https://sifudiep-ts-chess.herokuapp.com/");
+// const socket = io("ws://localhost:3000")
 
 let moveAudio = new Audio('./sfx/move.wav');
 let checkAudio = new Audio('./sfx/check.wav');
-let errorAudio = new Audio('./sfx/error.wav')
+let errorAudio = new Audio('./sfx/error.wav');
 
 function setupBoardColors() {
     let board = document.getElementById('chessBoard');
@@ -28,6 +30,34 @@ function setupBoardColors() {
 
 let turn : PieceColor = PieceColor.White;
 let playerColor : PieceColor = PieceColor.None;
+let isPlayer : boolean = false;
+let playerName : string = "Spectator";
+
+function connectToGame() {
+    socket.emit('connect-player', isPlayer);
+    console.log("connecting to game...")
+    
+    socket.on('success-connect', (data : ConnectionData) => {
+        isPlayer = data.isPlayer;
+        if (playerName === "Spectator") {
+            playerName = data.playerName
+        }
+        drawPlayerName();
+        console.log(`playerName : ${playerName}, isPlayer : ${isPlayer}`);
+    }) 
+}
+
+function detectMultiplayerMove() {
+    socket.on('move', (data : MoveData) => {
+        console.log(`move : ${data.coordinate}`);
+        movePieceByText(data.coordinate);
+        turn = data.turn;
+    })    
+}
+
+function drawPlayerName() {
+    document.querySelector('h1')!.innerHTML = `Name: ${playerName}`;
+}
 
 function setupDefaultBoardPieces() {
     // White pieces...
@@ -75,6 +105,8 @@ function initGame() {
     makeCellsLandable();
     updateAllLegalMovesAndFindChecks();
     detectMultiplayerMove()
+    connectToGame();
+    drawPlayerName();
 }
 
 function updatePieceJustMoved() {
@@ -536,13 +568,6 @@ function translateCoordinateToText(start : Coordinate, end : Coordinate) {
     return text;
 }
 
-function detectMultiplayerMove() {
-    socket.on('move', (data : MoveData) => {
-        console.log(`move : ${data.coordinate}`);
-        movePieceByText(data.coordinate);
-        turn = data.turn;
-    })    
-}
 
 
 function movePiece(piece : Piece, destination : Coordinate) {
@@ -682,6 +707,7 @@ function updateAllLegalMovesAndFindChecks() {
 
 function makePieceDraggable() {
     document.addEventListener("dragstart", (e : any) => {
+        if (isPlayer === false) return;
         let colIndex = parseInt(e.path[1].id.replace("col-", "")) - 1;
         let rowIndex = parseInt(e.path[1].getAttribute("row")!) - 1;
 

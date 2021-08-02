@@ -1,4 +1,5 @@
 const express = require("express");
+const { createLogicalAnd } = require("typescript");
 const server = express();
 const httpServer = require("http").createServer(server);
 
@@ -17,11 +18,20 @@ const io = require('socket.io')(httpServer, {
 });
 
 io.on('connection', (socket) => {
-    console.log("a user has connected...")
-
     socket.on("move", (move) => {
         console.log(move);
         io.emit('move', move)
+    })
+
+    socket.on("connect-player", (isPlayer) => {
+        console.log("player connected! " + io.engine.clientsCount);
+        if (io.engine.clientsCount <= 2) {
+            console.log("successfull connection!!!");
+            io.emit("success-connect", {
+                isPlayer : true,
+                playerName : `Player-${io.engine.clientsCount}`
+            });
+        }
     })
 })
 
