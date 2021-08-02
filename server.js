@@ -1,5 +1,6 @@
 const PieceColor = require("./enum/PieceColor.js")
 const express = require("express");
+const { createLogicalAnd } = require("typescript");
 const server = express();
 const httpServer = require("http").createServer(server);
 
@@ -27,6 +28,7 @@ io.on('connection', (socket) => {
         turn = move.turn;
         moveArray.push(move.coordinate);
         io.emit('move', move)
+        console.log(`MOVE: ${move.coordinate}`)
     })
 
     socket.on("connect-player", (isPlayer) => {

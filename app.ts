@@ -6,12 +6,29 @@ import { ConnectionData } from "./interface/ConnectionData.js";
 
 const io = require("socket.io-client");
 
-const socket = io("https://sifudiep-ts-chess.herokuapp.com/");
-// const socket = io("ws://localhost:3000")
+// const socket = io("https://sifudiep-ts-chess.herokuapp.com/");
+const socket = io("ws://localhost:3000")
 
 let moveAudio = new Audio('./sfx/move.wav');
 let checkAudio = new Audio('./sfx/check.wav');
 let errorAudio = new Audio('./sfx/error.wav');
+
+let turn : PieceColor = PieceColor.White;
+let playerColor : PieceColor = PieceColor.None;
+let isPlayer : boolean = false;
+let playerName : string = "Spectator";
+
+
+let Board : Piece[][] | undefined[][] = [[],[],[],[],[],[],[],[]] 
+
+let lastTouchedPiece : Piece;
+
+let whiteKing : Piece; 
+let blackKing : Piece;
+let whiteKingIsChecked : boolean = false;
+let blackKingIsChecked : boolean = false;
+
+initGame();
 
 function setupBoardColors() {
     let board = document.getElementById('chessBoard');
@@ -27,11 +44,6 @@ function setupBoardColors() {
         lightColor ? lightColor = false : lightColor = true;
     }
 } 
-
-let turn : PieceColor = PieceColor.White;
-let playerColor : PieceColor = PieceColor.None;
-let isPlayer : boolean = false;
-let playerName : string = "Spectator";
 
 function connectToGame() {
     socket.emit('connect-player', isPlayer);
@@ -59,7 +71,6 @@ function DrawBoardFromArray(moveArray : string[], playerTurn : PieceColor) {
 
 function detectMultiplayerMove() {
     socket.on('move', (data : MoveData) => {
-        console.log(`move : ${data.coordinate}`);
         movePieceByText(data.coordinate);
         turn = data.turn;
     })    
@@ -76,10 +87,10 @@ function setupDefaultBoardPieces() {
     }
     rookCreator(PieceColor.White, new Coordinate(0,0)); 
     rookCreator(PieceColor.White, new Coordinate(7,0)); 
-    knightCreator(PieceColor.White, new Coordinate(1,0));
-    knightCreator(PieceColor.White, new Coordinate(6,0));
-    bishopCreator(PieceColor.White, new Coordinate(2,0));
-    bishopCreator(PieceColor.White, new Coordinate(5,0));
+    // knightCreator(PieceColor.White, new Coordinate(1,0));
+    // knightCreator(PieceColor.White, new Coordinate(6,0));
+    // bishopCreator(PieceColor.White, new Coordinate(2,0));
+    // bishopCreator(PieceColor.White, new Coordinate(5,0));
     kingCreator(PieceColor.White, new Coordinate(4,0));
     queenCreator(PieceColor.White, new Coordinate(3,0));
 
@@ -89,23 +100,13 @@ function setupDefaultBoardPieces() {
     }
     rookCreator(PieceColor.Black, new Coordinate(0,7)); 
     rookCreator(PieceColor.Black, new Coordinate(7,7)); 
-    knightCreator(PieceColor.Black, new Coordinate(1,7));
-    knightCreator(PieceColor.Black, new Coordinate(6,7));
-    bishopCreator(PieceColor.Black, new Coordinate(2,7));
-    bishopCreator(PieceColor.Black, new Coordinate(5,7));
+    // knightCreator(PieceColor.Black, new Coordinate(1,7));
+    // knightCreator(PieceColor.Black, new Coordinate(6,7));
+    // bishopCreator(PieceColor.Black, new Coordinate(2,7));
+    // bishopCreator(PieceColor.Black, new Coordinate(5,7));
     kingCreator(PieceColor.Black, new Coordinate(4,7));
     queenCreator(PieceColor.Black, new Coordinate(3,7));
 }
-
-let Board : Piece[][] | undefined[][] = [[],[],[],[],[],[],[],[]] 
-
-let lastTouchedPiece : Piece;
-
-let whiteKing : Piece; 
-let blackKing : Piece;
-let whiteKingIsChecked : boolean = false;
-let blackKingIsChecked : boolean = false;
-
 
 function initGame() {
     setupBoardColors();
@@ -527,8 +528,25 @@ function movePieceByText(textInput : string) {
 
     let piece = Board[firstCoordinate.X][firstCoordinate.Y];
 
+    if (piece === undefined) {
+        console.log(piece);
+    }
+
     if (piece !== undefined) {
-        movePiece(piece, secondCoordinate);
+        let formerCoordinates = piece.CurrentPosition;
+        removeVisualCell(formerCoordinates);
+        destroyPiece(secondCoordinate);
+        updatePiecePosition(piece, secondCoordinate);
+        drawVisualCell(piece);
+        Board[formerCoordinates.X][formerCoordinates.Y] = undefined;
+        updateAllLegalMovesAndFindChecks();
+        changeTurn();
+    
+        if (blackKingIsChecked || whiteKingIsChecked) {
+            checkAudio.play();
+        } else {
+            moveAudio.play();
+        }
     }
 }
 
@@ -630,16 +648,18 @@ function movePiece(piece : Piece, destination : Coordinate) {
     updateAllLegalMovesAndFindChecks();
     changeTurn();
 
-    let data : MoveData = <MoveData>{};
-    data.coordinate = translateCoordinateToText(formerCoordinates, destination);
-    data.turn = turn;
-    socket.emit('move', data);
-
     if (blackKingIsChecked || whiteKingIsChecked) {
         checkAudio.play();
     } else {
         moveAudio.play();
     }
+
+    let data : MoveData = <MoveData>{};
+    data.coordinate = translateCoordinateToText(formerCoordinates, destination);
+    data.turn = turn;
+    socket.emit('move', data);
+
+
 }
 
 function changeTurn() {
@@ -713,7 +733,6 @@ function updateAllLegalMovesAndFindChecks() {
     }
 
 }
-
 
 function makePieceDraggable() {
     document.addEventListener("dragstart", (e : any) => {
@@ -810,4 +829,3 @@ function destroyPiece(coordinate : Coordinate) {
     }
 }
 
-initGame();
