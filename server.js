@@ -6,6 +6,7 @@ const port = process.env.PORT || 3000;
 
 server.use('/public' ,express.static(__dirname + '/public'));
 server.use('/pieces', express.static(__dirname + '/pieces'));
+server.use('/sfx', express.static(__dirname + '/sfx'))
 
 server.get('/*', (req, res) => {
     res.sendFile(__dirname + "/public/index.html");
