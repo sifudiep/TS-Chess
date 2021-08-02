@@ -1,10 +1,7 @@
 const PieceColor = require("./enum/PieceColor.js")
 const express = require("express");
-const { createLogicalAnd } = require("typescript");
 const server = express();
 const httpServer = require("http").createServer(server);
-
-
 
 const port = process.env.PORT || 3000;
 
@@ -15,7 +12,7 @@ server.use('/public' ,express.static(__dirname + '/public'));
 server.use('/pieces', express.static(__dirname + '/pieces'));
 server.use('/sfx', express.static(__dirname + '/sfx'))
 
-server.get('/*', (req, res) => {
+server.get('/', (req, res) => {
     res.sendFile(__dirname + "/public/index.html");
 })
 
