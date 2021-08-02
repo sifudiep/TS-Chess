@@ -1,8 +1,14 @@
+const PieceColor = require("./enum/PieceColor.js")
 const express = require("express");
 const server = express();
 const httpServer = require("http").createServer(server);
 
+
+
 const port = process.env.PORT || 3000;
+
+let moveArray = [];
+let turn = PieceColor.White;
 
 server.use('/public' ,express.static(__dirname + '/public'));
 server.use('/pieces', express.static(__dirname + '/pieces'));
@@ -18,12 +24,14 @@ const io = require('socket.io')(httpServer, {
 
 io.on('connection', (socket) => {
     socket.on("move", (move) => {
-        console.log(move);
+        turn = move.turn;
+        moveArray.push(move.coordinate);
         io.emit('move', move)
     })
 
     socket.on("connect-player", (isPlayer) => {
         console.log("player connected! " + io.engine.clientsCount);
+        io.emit("get-board", {moveArray});
         if (io.engine.clientsCount <= 2) {
             console.log("successfull connection!!!");
             io.emit("success-connect", {
@@ -32,6 +40,13 @@ io.on('connection', (socket) => {
             });
         }
     })
+})
+
+io.on('disconnect', () => {
+    if (io.engine.clientsCount === 0) {
+        moveArray = [];
+        turn = PieceColor.White;
+    }
 })
 
 httpServer.listen(port, () => console.log(`listening port:${port}`));

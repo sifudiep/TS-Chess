@@ -1,3 +1,6 @@
+"use strict";
+exports.__esModule = true;
+exports.Coordinate = void 0;
 var Coordinate = /** @class */ (function () {
     function Coordinate(x, y) {
         this.X = x;
@@ -5,4 +8,4 @@ var Coordinate = /** @class */ (function () {
     }
     return Coordinate;
 }());
-export { Coordinate };
+exports.Coordinate = Coordinate;

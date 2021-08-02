@@ -1,3 +1,6 @@
+"use strict";
+exports.__esModule = true;
+exports.Piece = void 0;
 var Piece = /** @class */ (function () {
     function Piece(color, CurrentPosition, Name) {
         this.HasBeenMoved = false;
@@ -10,4 +13,4 @@ var Piece = /** @class */ (function () {
     }
     return Piece;
 }());
-export { Piece };
+exports.Piece = Piece;

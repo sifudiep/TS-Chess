@@ -36,7 +36,7 @@ let playerName : string = "Spectator";
 function connectToGame() {
     socket.emit('connect-player', isPlayer);
     console.log("connecting to game...")
-    
+
     socket.on('success-connect', (data : ConnectionData) => {
         isPlayer = data.isPlayer;
         if (playerName === "Spectator") {
@@ -45,6 +45,16 @@ function connectToGame() {
         drawPlayerName();
         console.log(`playerName : ${playerName}, isPlayer : ${isPlayer}`);
     }) 
+
+    socket.on("get-board", (data : any) => {
+        DrawBoardFromArray(data.moveArray, data.turn);
+    })
+}
+
+function DrawBoardFromArray(moveArray : string[], playerTurn : PieceColor) {
+    for (let i = 0; i < moveArray.length; i++) {
+        movePieceByText(moveArray[i]); 
+    }
 }
 
 function detectMultiplayerMove() {
