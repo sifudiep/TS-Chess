@@ -1,11 +1,9 @@
-"use strict";
-exports.__esModule = true;
-var Piece_js_1 = require("./classes/Piece.js");
-var Coordinate_js_1 = require("./classes/Coordinate.js");
-var PieceColor_js_1 = require("./enum/PieceColor.js");
+import { Piece } from "./classes/Piece.js";
+import { Coordinate } from "./classes/Coordinate.js";
+import { PieceColor } from "./enum/PieceColor.js";
 var io = require("socket.io-client");
-// const socket = io("https://sifudiep-ts-chess.herokuapp.com/");
-var socket = io("ws://localhost:3000");
+var socket = io("https://sifudiep-ts-chess.herokuapp.com/");
+// const socket = io("ws://localhost:3000")
 var moveAudio = new Audio('./sfx/move.wav');
 var checkAudio = new Audio('./sfx/check.wav');
 var errorAudio = new Audio('./sfx/error.wav');
@@ -23,8 +21,8 @@ function setupBoardColors() {
         lightColor ? lightColor = false : lightColor = true;
     }
 }
-var turn = PieceColor_js_1.PieceColor.White;
-var playerColor = PieceColor_js_1.PieceColor.None;
+var turn = PieceColor.White;
+var playerColor = PieceColor.None;
 var isPlayer = false;
 var playerName = "Spectator";
 function connectToGame() {
@@ -32,7 +30,10 @@ function connectToGame() {
     console.log("connecting to game...");
     socket.on('success-connect', function (data) {
         isPlayer = data.isPlayer;
-        playerName = data.playerName;
+        if (playerName === "Spectator") {
+            playerName = data.playerName;
+        }
+        drawPlayerName();
         console.log("playerName : " + playerName + ", isPlayer : " + isPlayer);
     });
 }
@@ -43,31 +44,34 @@ function detectMultiplayerMove() {
         turn = data.turn;
     });
 }
+function drawPlayerName() {
+    document.querySelector('h1').innerHTML = "Name: " + playerName;
+}
 function setupDefaultBoardPieces() {
     // White pieces...
     for (var i = 0; i < 8; i++) {
-        pawnCreator(PieceColor_js_1.PieceColor.White, new Coordinate_js_1.Coordinate(i, 1));
+        pawnCreator(PieceColor.White, new Coordinate(i, 1));
     }
-    rookCreator(PieceColor_js_1.PieceColor.White, new Coordinate_js_1.Coordinate(0, 0));
-    rookCreator(PieceColor_js_1.PieceColor.White, new Coordinate_js_1.Coordinate(7, 0));
-    knightCreator(PieceColor_js_1.PieceColor.White, new Coordinate_js_1.Coordinate(1, 0));
-    knightCreator(PieceColor_js_1.PieceColor.White, new Coordinate_js_1.Coordinate(6, 0));
-    bishopCreator(PieceColor_js_1.PieceColor.White, new Coordinate_js_1.Coordinate(2, 0));
-    bishopCreator(PieceColor_js_1.PieceColor.White, new Coordinate_js_1.Coordinate(5, 0));
-    kingCreator(PieceColor_js_1.PieceColor.White, new Coordinate_js_1.Coordinate(4, 0));
-    queenCreator(PieceColor_js_1.PieceColor.White, new Coordinate_js_1.Coordinate(3, 0));
+    rookCreator(PieceColor.White, new Coordinate(0, 0));
+    rookCreator(PieceColor.White, new Coordinate(7, 0));
+    knightCreator(PieceColor.White, new Coordinate(1, 0));
+    knightCreator(PieceColor.White, new Coordinate(6, 0));
+    bishopCreator(PieceColor.White, new Coordinate(2, 0));
+    bishopCreator(PieceColor.White, new Coordinate(5, 0));
+    kingCreator(PieceColor.White, new Coordinate(4, 0));
+    queenCreator(PieceColor.White, new Coordinate(3, 0));
     // Black pieces...
     for (var i = 0; i < 8; i++) {
-        pawnCreator(PieceColor_js_1.PieceColor.Black, new Coordinate_js_1.Coordinate(i, 6));
+        pawnCreator(PieceColor.Black, new Coordinate(i, 6));
     }
-    rookCreator(PieceColor_js_1.PieceColor.Black, new Coordinate_js_1.Coordinate(0, 7));
-    rookCreator(PieceColor_js_1.PieceColor.Black, new Coordinate_js_1.Coordinate(7, 7));
-    knightCreator(PieceColor_js_1.PieceColor.Black, new Coordinate_js_1.Coordinate(1, 7));
-    knightCreator(PieceColor_js_1.PieceColor.Black, new Coordinate_js_1.Coordinate(6, 7));
-    bishopCreator(PieceColor_js_1.PieceColor.Black, new Coordinate_js_1.Coordinate(2, 7));
-    bishopCreator(PieceColor_js_1.PieceColor.Black, new Coordinate_js_1.Coordinate(5, 7));
-    kingCreator(PieceColor_js_1.PieceColor.Black, new Coordinate_js_1.Coordinate(4, 7));
-    queenCreator(PieceColor_js_1.PieceColor.Black, new Coordinate_js_1.Coordinate(3, 7));
+    rookCreator(PieceColor.Black, new Coordinate(0, 7));
+    rookCreator(PieceColor.Black, new Coordinate(7, 7));
+    knightCreator(PieceColor.Black, new Coordinate(1, 7));
+    knightCreator(PieceColor.Black, new Coordinate(6, 7));
+    bishopCreator(PieceColor.Black, new Coordinate(2, 7));
+    bishopCreator(PieceColor.Black, new Coordinate(5, 7));
+    kingCreator(PieceColor.Black, new Coordinate(4, 7));
+    queenCreator(PieceColor.Black, new Coordinate(3, 7));
 }
 var Board = [[], [], [], [], [], [], [], []];
 var lastTouchedPiece;
@@ -84,6 +88,7 @@ function initGame() {
     updateAllLegalMovesAndFindChecks();
     detectMultiplayerMove();
     connectToGame();
+    drawPlayerName();
 }
 function updatePieceJustMoved() {
     for (var y = 0; y <= 7; y++) {
@@ -105,25 +110,25 @@ function moveLikePawn(self) {
         queenCreator(color, coordinate);
         drawVisualCell(Board[coordinate.X][coordinate.Y]);
     }
-    if (self.Color === PieceColor_js_1.PieceColor.White) {
+    if (self.Color === PieceColor.White) {
         if (self.CurrentPosition.X - 1 >= 0) {
             if (Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y + 1] !== undefined) {
-                if (((_a = Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y + 1]) === null || _a === void 0 ? void 0 : _a.Color) === PieceColor_js_1.PieceColor.Black) {
-                    self.LegalMoves.push(new Coordinate_js_1.Coordinate(self.CurrentPosition.X - 1, self.CurrentPosition.Y + 1));
+                if (((_a = Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y + 1]) === null || _a === void 0 ? void 0 : _a.Color) === PieceColor.Black) {
+                    self.LegalMoves.push(new Coordinate(self.CurrentPosition.X - 1, self.CurrentPosition.Y + 1));
                 }
             }
         }
         if (self.CurrentPosition.X + 1 <= 7) {
             if (Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y + 1] !== undefined) {
-                if (((_b = Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y + 1]) === null || _b === void 0 ? void 0 : _b.Color) === PieceColor_js_1.PieceColor.Black) {
-                    self.LegalMoves.push(new Coordinate_js_1.Coordinate(self.CurrentPosition.X + 1, self.CurrentPosition.Y + 1));
+                if (((_b = Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y + 1]) === null || _b === void 0 ? void 0 : _b.Color) === PieceColor.Black) {
+                    self.LegalMoves.push(new Coordinate(self.CurrentPosition.X + 1, self.CurrentPosition.Y + 1));
                 }
             }
         }
         if (Board[self.CurrentPosition.X][self.CurrentPosition.Y + 1] === undefined) {
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(self.CurrentPosition.X, self.CurrentPosition.Y + 1));
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X, self.CurrentPosition.Y + 1));
             if (Board[self.CurrentPosition.X][self.CurrentPosition.Y + 2] === undefined && self.HasBeenMoved === false) {
-                self.LegalMoves.push(new Coordinate_js_1.Coordinate(self.CurrentPosition.X, self.CurrentPosition.Y + 2));
+                self.LegalMoves.push(new Coordinate(self.CurrentPosition.X, self.CurrentPosition.Y + 2));
             }
         }
         if (self.CurrentPosition.X + 1 <= 7 &&
@@ -131,35 +136,35 @@ function moveLikePawn(self) {
             ((_c = Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y]) === null || _c === void 0 ? void 0 : _c.Name) === "Pawn" &&
             ((_d = Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y]) === null || _d === void 0 ? void 0 : _d.JustMadeFirstMove) &&
             ((_e = Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y]) === null || _e === void 0 ? void 0 : _e.Color) !== self.Color) {
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(self.CurrentPosition.X + 1, self.CurrentPosition.Y + 1));
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X + 1, self.CurrentPosition.Y + 1));
         }
         if (self.CurrentPosition.X - 1 >= 0 &&
             Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y] !== undefined &&
             ((_f = Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y]) === null || _f === void 0 ? void 0 : _f.Name) === "Pawn" &&
             ((_g = Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y]) === null || _g === void 0 ? void 0 : _g.JustMadeFirstMove) &&
             ((_h = Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y]) === null || _h === void 0 ? void 0 : _h.Color) !== self.Color) {
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(self.CurrentPosition.X - 1, self.CurrentPosition.Y + 1));
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X - 1, self.CurrentPosition.Y + 1));
         }
     }
-    else if (self.Color === PieceColor_js_1.PieceColor.Black) {
+    else if (self.Color === PieceColor.Black) {
         if (self.CurrentPosition.X - 1 >= 0) {
             if (Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y - 1] !== undefined) {
-                if (((_j = Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y - 1]) === null || _j === void 0 ? void 0 : _j.Color) === PieceColor_js_1.PieceColor.White) {
-                    self.LegalMoves.push(new Coordinate_js_1.Coordinate(self.CurrentPosition.X - 1, self.CurrentPosition.Y - 1));
+                if (((_j = Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y - 1]) === null || _j === void 0 ? void 0 : _j.Color) === PieceColor.White) {
+                    self.LegalMoves.push(new Coordinate(self.CurrentPosition.X - 1, self.CurrentPosition.Y - 1));
                 }
             }
         }
         if (self.CurrentPosition.X + 1 <= 7) {
             if (Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y - 1] !== undefined) {
-                if (((_k = Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y - 1]) === null || _k === void 0 ? void 0 : _k.Color) === PieceColor_js_1.PieceColor.White) {
-                    self.LegalMoves.push(new Coordinate_js_1.Coordinate(self.CurrentPosition.X + 1, self.CurrentPosition.Y - 1));
+                if (((_k = Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y - 1]) === null || _k === void 0 ? void 0 : _k.Color) === PieceColor.White) {
+                    self.LegalMoves.push(new Coordinate(self.CurrentPosition.X + 1, self.CurrentPosition.Y - 1));
                 }
             }
         }
         if (Board[self.CurrentPosition.X][self.CurrentPosition.Y - 1] === undefined) {
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(self.CurrentPosition.X, self.CurrentPosition.Y - 1));
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X, self.CurrentPosition.Y - 1));
             if (Board[self.CurrentPosition.X][self.CurrentPosition.Y - 2] === undefined && self.HasBeenMoved === false) {
-                self.LegalMoves.push(new Coordinate_js_1.Coordinate(self.CurrentPosition.X, self.CurrentPosition.Y - 2));
+                self.LegalMoves.push(new Coordinate(self.CurrentPosition.X, self.CurrentPosition.Y - 2));
             }
         }
         if (self.CurrentPosition.X + 1 <= 7 &&
@@ -167,14 +172,14 @@ function moveLikePawn(self) {
             ((_l = Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y]) === null || _l === void 0 ? void 0 : _l.Name) === "Pawn" &&
             ((_m = Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y]) === null || _m === void 0 ? void 0 : _m.JustMadeFirstMove) &&
             ((_o = Board[self.CurrentPosition.X + 1][self.CurrentPosition.Y]) === null || _o === void 0 ? void 0 : _o.Color) !== self.Color) {
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(self.CurrentPosition.X + 1, self.CurrentPosition.Y - 1));
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X + 1, self.CurrentPosition.Y - 1));
         }
         if (self.CurrentPosition.X - 1 >= 0 &&
             Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y] !== undefined &&
             ((_p = Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y]) === null || _p === void 0 ? void 0 : _p.Name) === "Pawn" &&
             ((_q = Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y]) === null || _q === void 0 ? void 0 : _q.JustMadeFirstMove) &&
             ((_r = Board[self.CurrentPosition.X - 1][self.CurrentPosition.Y]) === null || _r === void 0 ? void 0 : _r.Color) !== self.Color) {
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(self.CurrentPosition.X - 1, self.CurrentPosition.Y - 1));
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X - 1, self.CurrentPosition.Y - 1));
         }
     }
 }
@@ -182,7 +187,7 @@ function moveLikeRook(self) {
     var _a, _b, _c, _d;
     for (var i = self.CurrentPosition.X - 1; i >= 0; i--) {
         if (((_a = Board[i][self.CurrentPosition.Y]) === null || _a === void 0 ? void 0 : _a.Color) !== self.Color) {
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(i, self.CurrentPosition.Y));
+            self.LegalMoves.push(new Coordinate(i, self.CurrentPosition.Y));
             if (Board[i][self.CurrentPosition.Y] !== undefined) {
                 break;
             }
@@ -193,7 +198,7 @@ function moveLikeRook(self) {
     }
     for (var i = self.CurrentPosition.X + 1; i <= 7; i++) {
         if (((_b = Board[i][self.CurrentPosition.Y]) === null || _b === void 0 ? void 0 : _b.Color) !== self.Color) {
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(i, self.CurrentPosition.Y));
+            self.LegalMoves.push(new Coordinate(i, self.CurrentPosition.Y));
             if (Board[i][self.CurrentPosition.Y] !== undefined) {
                 break;
             }
@@ -204,7 +209,7 @@ function moveLikeRook(self) {
     }
     for (var i = self.CurrentPosition.Y - 1; i >= 0; i--) {
         if (((_c = Board[self.CurrentPosition.X][i]) === null || _c === void 0 ? void 0 : _c.Color) !== self.Color) {
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(self.CurrentPosition.X, i));
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X, i));
             if (Board[self.CurrentPosition.X][i] !== undefined) {
                 break;
             }
@@ -215,7 +220,7 @@ function moveLikeRook(self) {
     }
     for (var i = self.CurrentPosition.Y + 1; i <= 7; i++) {
         if (((_d = Board[self.CurrentPosition.X][i]) === null || _d === void 0 ? void 0 : _d.Color) !== self.Color) {
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(self.CurrentPosition.X, i));
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X, i));
             if (Board[self.CurrentPosition.X][i] !== undefined) {
                 break;
             }
@@ -229,7 +234,7 @@ function moveLikeBishop(self) {
     var _a, _b, _c, _d;
     for (var i = 1; self.CurrentPosition.X + i <= 7 && self.CurrentPosition.Y + i <= 7; i++) {
         if (((_a = Board[self.CurrentPosition.X + i][self.CurrentPosition.Y + i]) === null || _a === void 0 ? void 0 : _a.Color) !== self.Color) {
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(self.CurrentPosition.X + i, self.CurrentPosition.Y + i));
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X + i, self.CurrentPosition.Y + i));
             if (Board[self.CurrentPosition.X + i][self.CurrentPosition.Y + i] !== undefined) {
                 break;
             }
@@ -240,7 +245,7 @@ function moveLikeBishop(self) {
     }
     for (var i = 1; self.CurrentPosition.X - i >= 0 && self.CurrentPosition.Y + i <= 7; i++) {
         if (((_b = Board[self.CurrentPosition.X - i][self.CurrentPosition.Y + i]) === null || _b === void 0 ? void 0 : _b.Color) !== self.Color) {
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(self.CurrentPosition.X - i, self.CurrentPosition.Y + i));
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X - i, self.CurrentPosition.Y + i));
             if (Board[self.CurrentPosition.X - i][self.CurrentPosition.Y + i] !== undefined) {
                 break;
             }
@@ -251,7 +256,7 @@ function moveLikeBishop(self) {
     }
     for (var i = 1; self.CurrentPosition.X + i <= 7 && self.CurrentPosition.Y - i >= 0; i++) {
         if (((_c = Board[self.CurrentPosition.X + i][self.CurrentPosition.Y - i]) === null || _c === void 0 ? void 0 : _c.Color) !== self.Color) {
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(self.CurrentPosition.X + i, self.CurrentPosition.Y - i));
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X + i, self.CurrentPosition.Y - i));
             if (Board[self.CurrentPosition.X + i][self.CurrentPosition.Y - i] !== undefined) {
                 break;
             }
@@ -262,7 +267,7 @@ function moveLikeBishop(self) {
     }
     for (var i = 1; self.CurrentPosition.X - i >= 0 && self.CurrentPosition.Y - i >= 0; i++) {
         if (((_d = Board[self.CurrentPosition.X - i][self.CurrentPosition.Y - i]) === null || _d === void 0 ? void 0 : _d.Color) !== self.Color) {
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(self.CurrentPosition.X - i, self.CurrentPosition.Y - i));
+            self.LegalMoves.push(new Coordinate(self.CurrentPosition.X - i, self.CurrentPosition.Y - i));
             if (Board[self.CurrentPosition.X - i][self.CurrentPosition.Y - i] !== undefined) {
                 break;
             }
@@ -278,34 +283,34 @@ function moveLikeKnight(self) {
     var x = self.CurrentPosition.X;
     if (y + 2 <= 7) {
         if (x + 1 <= 7 && ((_a = Board[x + 1][y + 2]) === null || _a === void 0 ? void 0 : _a.Color) !== self.Color) {
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(x + 1, y + 2));
+            self.LegalMoves.push(new Coordinate(x + 1, y + 2));
         }
         if (x - 1 >= 0 && ((_b = Board[x - 1][y + 2]) === null || _b === void 0 ? void 0 : _b.Color) !== self.Color) {
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(x - 1, y + 2));
+            self.LegalMoves.push(new Coordinate(x - 1, y + 2));
         }
     }
     if (y - 2 >= 0) {
         if (x + 1 <= 7 && ((_c = Board[x + 1][y - 2]) === null || _c === void 0 ? void 0 : _c.Color) !== self.Color) {
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(x + 1, y - 2));
+            self.LegalMoves.push(new Coordinate(x + 1, y - 2));
         }
         if (x - 1 >= 0 && ((_d = Board[x - 1][y - 2]) === null || _d === void 0 ? void 0 : _d.Color) !== self.Color) {
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(x - 1, y - 2));
+            self.LegalMoves.push(new Coordinate(x - 1, y - 2));
         }
     }
     if (x + 2 <= 7) {
         if (y + 1 <= 7 && ((_e = Board[x + 2][y + 1]) === null || _e === void 0 ? void 0 : _e.Color) !== self.Color) {
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(x + 2, y + 1));
+            self.LegalMoves.push(new Coordinate(x + 2, y + 1));
         }
         if (y - 1 >= 0 && ((_f = Board[x + 2][y - 1]) === null || _f === void 0 ? void 0 : _f.Color) !== self.Color) {
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(x + 2, y - 1));
+            self.LegalMoves.push(new Coordinate(x + 2, y - 1));
         }
     }
     if (x - 2 >= 0) {
         if (y + 1 <= 7 && ((_g = Board[x - 2][y + 1]) === null || _g === void 0 ? void 0 : _g.Color) !== self.Color) {
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(x - 2, y + 1));
+            self.LegalMoves.push(new Coordinate(x - 2, y + 1));
         }
         if (y - 1 >= 0 && ((_h = Board[x - 2][y - 1]) === null || _h === void 0 ? void 0 : _h.Color) !== self.Color) {
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(x - 2, y - 1));
+            self.LegalMoves.push(new Coordinate(x - 2, y - 1));
         }
     }
 }
@@ -314,75 +319,75 @@ function moveLikeKing(self) {
     var x = self.CurrentPosition.X;
     var y = self.CurrentPosition.Y;
     if (x + 1 <= 7 && ((_a = Board[x + 1][y]) === null || _a === void 0 ? void 0 : _a.Color) !== self.Color) {
-        self.LegalMoves.push(new Coordinate_js_1.Coordinate(x + 1, y));
+        self.LegalMoves.push(new Coordinate(x + 1, y));
     }
     if (x + 1 <= 7 && y + 1 <= 7 && ((_b = Board[x + 1][y + 1]) === null || _b === void 0 ? void 0 : _b.Color) !== self.Color) {
-        self.LegalMoves.push(new Coordinate_js_1.Coordinate(x + 1, y + 1));
+        self.LegalMoves.push(new Coordinate(x + 1, y + 1));
     }
     if (x + 1 <= 7 && y - 1 >= 0 && ((_c = Board[x + 1][y - 1]) === null || _c === void 0 ? void 0 : _c.Color) !== self.Color) {
-        self.LegalMoves.push(new Coordinate_js_1.Coordinate(x + 1, y - 1));
+        self.LegalMoves.push(new Coordinate(x + 1, y - 1));
     }
     if (x - 1 >= 0 && ((_d = Board[x - 1][y]) === null || _d === void 0 ? void 0 : _d.Color) !== self.Color) {
-        self.LegalMoves.push(new Coordinate_js_1.Coordinate(x - 1, y));
+        self.LegalMoves.push(new Coordinate(x - 1, y));
     }
     if (x - 1 >= 0 && y + 1 <= 7 && ((_e = Board[x - 1][y + 1]) === null || _e === void 0 ? void 0 : _e.Color) !== self.Color) {
-        self.LegalMoves.push(new Coordinate_js_1.Coordinate(x - 1, y + 1));
+        self.LegalMoves.push(new Coordinate(x - 1, y + 1));
     }
     if (x - 1 >= 0 && y - 1 >= 0 && ((_f = Board[x - 1][y - 1]) === null || _f === void 0 ? void 0 : _f.Color) !== self.Color) {
-        self.LegalMoves.push(new Coordinate_js_1.Coordinate(x - 1, y - 1));
+        self.LegalMoves.push(new Coordinate(x - 1, y - 1));
     }
     if (y + 1 <= 7 && ((_g = Board[x][y + 1]) === null || _g === void 0 ? void 0 : _g.Color) !== self.Color) {
-        self.LegalMoves.push(new Coordinate_js_1.Coordinate(x, y + 1));
+        self.LegalMoves.push(new Coordinate(x, y + 1));
     }
     if (y - 1 >= 0 && ((_h = Board[x][y - 1]) === null || _h === void 0 ? void 0 : _h.Color) !== self.Color) {
-        self.LegalMoves.push(new Coordinate_js_1.Coordinate(x, y - 1));
+        self.LegalMoves.push(new Coordinate(x, y - 1));
     }
     // castling...
-    var ownKingIsChecked = self.Color === PieceColor_js_1.PieceColor.White ? whiteKingIsChecked : blackKingIsChecked;
+    var ownKingIsChecked = self.Color === PieceColor.White ? whiteKingIsChecked : blackKingIsChecked;
     if (!self.HasBeenMoved && !ownKingIsChecked) {
         if (Board[5][self.CurrentPosition.Y] === undefined && Board[6][self.CurrentPosition.Y] === undefined && Board[7][self.CurrentPosition.Y] !== undefined && ((_j = Board[7][self.CurrentPosition.Y]) === null || _j === void 0 ? void 0 : _j.HasBeenMoved) === false) {
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(6, self.CurrentPosition.Y));
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(7, self.CurrentPosition.Y));
+            self.LegalMoves.push(new Coordinate(6, self.CurrentPosition.Y));
+            self.LegalMoves.push(new Coordinate(7, self.CurrentPosition.Y));
         }
         if (Board[3][self.CurrentPosition.Y] === undefined && Board[2][self.CurrentPosition.Y] === undefined && Board[0][self.CurrentPosition.Y] !== undefined && ((_k = Board[0][self.CurrentPosition.Y]) === null || _k === void 0 ? void 0 : _k.HasBeenMoved) === false) {
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(2, self.CurrentPosition.Y));
-            self.LegalMoves.push(new Coordinate_js_1.Coordinate(0, self.CurrentPosition.Y));
+            self.LegalMoves.push(new Coordinate(2, self.CurrentPosition.Y));
+            self.LegalMoves.push(new Coordinate(0, self.CurrentPosition.Y));
         }
     }
 }
 function pawnCreator(color, currentPosition) {
-    var piece = new Piece_js_1.Piece(color, currentPosition, "Pawn");
+    var piece = new Piece(color, currentPosition, "Pawn");
     piece.Moves.push(moveLikePawn);
     Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
 }
 function rookCreator(color, currentPosition) {
-    var piece = new Piece_js_1.Piece(color, currentPosition, "Rook");
+    var piece = new Piece(color, currentPosition, "Rook");
     piece.Moves.push(moveLikeRook);
     Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
 }
 function bishopCreator(color, currentPosition) {
-    var piece = new Piece_js_1.Piece(color, currentPosition, "Bishop");
+    var piece = new Piece(color, currentPosition, "Bishop");
     piece.Moves.push(moveLikeBishop);
     Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
 }
 function knightCreator(color, currentPosition) {
-    var piece = new Piece_js_1.Piece(color, currentPosition, "Knight");
+    var piece = new Piece(color, currentPosition, "Knight");
     piece.Moves.push(moveLikeKnight);
     Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
 }
 function kingCreator(color, currentPosition) {
-    var piece = new Piece_js_1.Piece(color, currentPosition, "King");
+    var piece = new Piece(color, currentPosition, "King");
     piece.Moves.push(moveLikeKing);
     Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
-    if (color === PieceColor_js_1.PieceColor.White) {
+    if (color === PieceColor.White) {
         whiteKing = piece;
     }
-    else if (color === PieceColor_js_1.PieceColor.Black) {
+    else if (color === PieceColor.Black) {
         blackKing = piece;
     }
 }
 function queenCreator(color, currentPosition) {
-    var piece = new Piece_js_1.Piece(color, currentPosition, "Queen");
+    var piece = new Piece(color, currentPosition, "Queen");
     piece.Moves.push(moveLikeBishop);
     piece.Moves.push(moveLikeRook);
     Board[piece.CurrentPosition.X][piece.CurrentPosition.Y] = piece;
@@ -433,9 +438,9 @@ function drawVisualCell(piece) {
         visualCell.removeChild(visualCell.firstElementChild);
     var visualCellImgBackground = document.createElement("div");
     var color = "";
-    if (piece.Color === PieceColor_js_1.PieceColor.White)
+    if (piece.Color === PieceColor.White)
         color = "light";
-    if (piece.Color === PieceColor_js_1.PieceColor.Black)
+    if (piece.Color === PieceColor.Black)
         color = "dark";
     visualCellImgBackground.setAttribute("style", "background-image: url(\"./pieces/" + color + "-" + logicalCell.Name.toLowerCase() + ".svg\")");
     visualCellImgBackground.setAttribute("class", " piece-background");
@@ -481,7 +486,7 @@ function translateTextToCoordinate(textCoordinate) {
                 break;
         }
     }
-    return new Coordinate_js_1.Coordinate(x, y);
+    return new Coordinate(x, y);
 }
 function translateCoordinateToText(start, end) {
     var text = "";
@@ -500,21 +505,21 @@ function movePiece(piece, destination) {
             // Castle LEFT
             if (xDifference > 0) {
                 for (var i = 3; i >= 2; i--) {
-                    if (moveIsIllegal(piece, new Coordinate_js_1.Coordinate(i, piece.CurrentPosition.Y))) {
+                    if (moveIsIllegal(piece, new Coordinate(i, piece.CurrentPosition.Y))) {
                         return;
                     }
                 }
                 destination.X = 2;
-                movePiece(Board[0][piece.CurrentPosition.Y], new Coordinate_js_1.Coordinate(3, piece.CurrentPosition.Y));
+                movePiece(Board[0][piece.CurrentPosition.Y], new Coordinate(3, piece.CurrentPosition.Y));
             }
             else { // Castle RIGHT
                 for (var i = 5; i <= 6; i++) {
-                    if (moveIsIllegal(piece, new Coordinate_js_1.Coordinate(i, piece.CurrentPosition.Y))) {
+                    if (moveIsIllegal(piece, new Coordinate(i, piece.CurrentPosition.Y))) {
                         return;
                     }
                 }
                 destination.X = 6;
-                movePiece(Board[7][piece.CurrentPosition.Y], new Coordinate_js_1.Coordinate(5, piece.CurrentPosition.Y));
+                movePiece(Board[7][piece.CurrentPosition.Y], new Coordinate(5, piece.CurrentPosition.Y));
             }
         }
     }
@@ -524,11 +529,11 @@ function movePiece(piece, destination) {
             piece.JustMadeFirstMove = true;
         }
         if (Board[destination.X][destination.Y] === undefined) {
-            var behindDestination = piece.Color === PieceColor_js_1.PieceColor.White ? destination.Y - 1 : destination.Y + 1;
+            var behindDestination = piece.Color === PieceColor.White ? destination.Y - 1 : destination.Y + 1;
             if (Board[destination.X][behindDestination] !== undefined &&
                 ((_a = Board[destination.X][behindDestination]) === null || _a === void 0 ? void 0 : _a.Name) === "Pawn" &&
                 ((_b = Board[destination.X][behindDestination]) === null || _b === void 0 ? void 0 : _b.Color) !== piece.Color) {
-                destroyPiece(new Coordinate_js_1.Coordinate(destination.X, behindDestination));
+                destroyPiece(new Coordinate(destination.X, behindDestination));
             }
         }
     }
@@ -552,11 +557,11 @@ function movePiece(piece, destination) {
     }
 }
 function changeTurn() {
-    if (turn === PieceColor_js_1.PieceColor.White) {
-        turn = PieceColor_js_1.PieceColor.Black;
+    if (turn === PieceColor.White) {
+        turn = PieceColor.Black;
     }
-    else if (turn === PieceColor_js_1.PieceColor.Black) {
-        turn = PieceColor_js_1.PieceColor.White;
+    else if (turn === PieceColor.Black) {
+        turn = PieceColor.White;
     }
 }
 function moveIsIllegal(piece, destination) {
@@ -566,9 +571,9 @@ function moveIsIllegal(piece, destination) {
     updatePiecePosition(piece, destination);
     updateAllLegalMovesAndFindChecks();
     var kingGetsChecked = false;
-    if (piece.Color === PieceColor_js_1.PieceColor.White && whiteKingIsChecked)
+    if (piece.Color === PieceColor.White && whiteKingIsChecked)
         kingGetsChecked = true;
-    if (piece.Color === PieceColor_js_1.PieceColor.Black && blackKingIsChecked)
+    if (piece.Color === PieceColor.Black && blackKingIsChecked)
         kingGetsChecked = true;
     // Revert board to former state
     updatePiecePosition(piece, formerCoordinates);
@@ -606,12 +611,12 @@ function updateAllLegalMovesAndFindChecks() {
             if (Board[x][y] === undefined)
                 return "continue";
             updateLegalMoves(Board[x][y]);
-            var opponentKing = Board[x][y].Color === PieceColor_js_1.PieceColor.White ? blackKing : whiteKing;
+            var opponentKing = Board[x][y].Color === PieceColor.White ? blackKing : whiteKing;
             Board[x][y].LegalMoves.forEach(function (legalMove) {
                 var _a;
                 if (legalMove.X === opponentKing.CurrentPosition.X && legalMove.Y === opponentKing.CurrentPosition.Y) {
                     console.log("ChECK!");
-                    if (((_a = Board[x][y]) === null || _a === void 0 ? void 0 : _a.Color) === PieceColor_js_1.PieceColor.White)
+                    if (((_a = Board[x][y]) === null || _a === void 0 ? void 0 : _a.Color) === PieceColor.White)
                         blackKingIsChecked = true;
                     else
                         whiteKingIsChecked = true;
@@ -628,13 +633,15 @@ function updateAllLegalMovesAndFindChecks() {
 }
 function makePieceDraggable() {
     document.addEventListener("dragstart", function (e) {
+        if (isPlayer === false)
+            return;
         var colIndex = parseInt(e.path[1].id.replace("col-", "")) - 1;
         var rowIndex = parseInt(e.path[1].getAttribute("row")) - 1;
         var piece = Board[colIndex][rowIndex];
         if (piece == undefined)
             return;
         if (piece.Color === turn) {
-            if (playerColor === piece.Color || playerColor === PieceColor_js_1.PieceColor.None) {
+            if (playerColor === piece.Color || playerColor === PieceColor.None) {
                 updateLegalMoves(piece);
                 highlightLegalMoves(piece);
                 lastTouchedPiece = piece;
@@ -670,7 +677,7 @@ function makeCellsLandable() {
                 updatePieceJustMoved();
                 movePiece(lastTouchedPiece, dropCoordinate);
                 lastTouchedPiece.HasBeenMoved = true;
-                if (playerColor === PieceColor_js_1.PieceColor.None) {
+                if (playerColor === PieceColor.None) {
                     playerColor = lastTouchedPiece.Color;
                 }
                 drawBoard();
@@ -692,7 +699,7 @@ function getCoordinateFromElement(element) {
     }
     var rowIndex = parseInt(cellDiv.getAttribute("row")) - 1;
     var colIndex = parseInt(cellDiv.id.replace("col-", "")) - 1;
-    return new Coordinate_js_1.Coordinate(colIndex, rowIndex);
+    return new Coordinate(colIndex, rowIndex);
 }
 function destroyPiece(coordinate) {
     if (Board[coordinate.X][coordinate.Y] !== undefined) {
