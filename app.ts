@@ -2,7 +2,6 @@ import { Piece } from "./classes/Piece.js";
 import { Coordinate } from "./classes/Coordinate.js";
 import { MoveData } from "./interface/MoveData.js";
 import { PieceColor } from "./enum/PieceColor.js";
-import { ConnectionData } from "./interface/ConnectionData.js";
 
 const io = require("socket.io-client");
 
@@ -46,12 +45,16 @@ function setupBoardColors() {
 } 
 
 function connectToGame() {
-    socket.emit('connect-player', isPlayer);
-
-    socket.on('success-connect', (data : ConnectionData) => {
-        isPlayer = data.isPlayer;
-        if (playerName === "Spectator") {
-            playerName = data.playerName
+    socket.on('success-connect', (data : any) => {
+        if (playerColor !== PieceColor.None) return
+        if (data !== PieceColor.None) isPlayer = true;
+        if (data == PieceColor.White) {
+            playerName = "White";
+            playerColor = PieceColor.White;
+        }
+        else if (data == PieceColor.Black){
+            playerName = "Black";
+            playerColor = PieceColor.Black;
         }
         drawPlayerName();
     }) 
@@ -116,6 +119,7 @@ function initGame() {
     detectMultiplayerMove()
     connectToGame();
     drawPlayerName();
+    listenToResetBoard();
 }
 
 function updatePieceJustMoved(color : PieceColor) {
@@ -730,7 +734,6 @@ function updateAllLegalMovesAndFindChecks() {
             let opponentKing : Piece = Board[x][y]!.Color === PieceColor.White ? blackKing : whiteKing;
             Board[x][y]!.LegalMoves.forEach(legalMove => {
                 if (legalMove.X === opponentKing.CurrentPosition.X && legalMove.Y === opponentKing.CurrentPosition.Y) {
-                    console.log(`ChECK!`);
                     if (Board[x][y]?.Color === PieceColor.White) blackKingIsChecked = true;
                     else whiteKingIsChecked = true; 
                 }
@@ -750,7 +753,7 @@ function makePieceDraggable() {
         if (piece == undefined) return;
 
         if (piece.Color === turn) {
-            if (playerColor === piece.Color || playerColor === PieceColor.None) {
+            if (playerColor === piece.Color) {
                 updateLegalMoves(piece);
                 highlightLegalMoves(piece);
                 lastTouchedPiece = piece;
@@ -794,10 +797,6 @@ function makeCellsLandable() {
 
             if (moveIsIllegal(lastTouchedPiece, dropCoordinate) === false) {
                 movePiece(lastTouchedPiece, dropCoordinate);
-                if (playerColor === PieceColor.None) {
-                    playerColor = lastTouchedPiece.Color;
-                }
-                
                 drawBoard();
             }
 
@@ -805,6 +804,35 @@ function makeCellsLandable() {
         }
     })
 }
+
+function listenToResetBoard() {
+    document.querySelector("button")?.addEventListener("click", () => {
+        socket.emit("reset");
+    })
+
+    socket.on("redraw-board", () => {
+        resetBoard();
+    })
+}
+
+function resetBoard() {
+    eraseChessHTMLElements();
+    Board = [[],[],[],[],[],[],[],[]];
+    setupDefaultBoardPieces();
+    drawBoard();
+}
+
+function eraseChessHTMLElements() { 
+    for (let x = 0; x <= 7; x++) {
+        for(let y = 0; y <= 7; y++) {
+           if (Board[x][y] !== undefined) {
+               removeVisualCell(Board[x][y]!.CurrentPosition);
+           } 
+        }
+    }
+}
+
+
 
 function getCoordinateFromElement(element : any) {
     let cellDiv : HTMLDivElement | HTMLImageElement | any;
