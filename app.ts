@@ -32,7 +32,6 @@ let blackKingIsChecked : boolean = false;
 initGame();
 
 function setBoardPerspective() {
-    console.log(`setting board perspective`);
     if (playerColor === PieceColor.White) {
         document.getElementById("black-perspective")?.remove();
     } else if (playerColor === PieceColor.Black) {
@@ -44,7 +43,6 @@ function setBoardPerspective() {
 }
 
 function setupBoardColors() {
-    console.log(`setupBoardColors`);
     let blackBoard = document.getElementsByClassName('chessBoard')[0];
     let whiteBoard = document.getElementsByClassName('chessBoard')[1];
 
@@ -65,7 +63,6 @@ function setupBoardColors() {
 
 function connectToGame() {
     socket.on('player-connect', (data : any) => {
-        console.log(`success-connect, playerColor : ${playerColor}`);
         if (playerColor !== PieceColor.None) return
         if (data !== PieceColor.None) isPlayer = true;
         if (data == PieceColor.White) {
@@ -86,7 +83,6 @@ function connectToGame() {
     })
 
     socket.on("get-board", (data : any) => {
-        console.log(`got board: `);
         console.log(data.moveArray);
         drawBoardFromArray(data.moveArray, data.turn);
     })
@@ -111,16 +107,15 @@ function drawPlayerName() {
 
 function setupDefaultBoardPieces() {
     // White pieces...
-    console.log(`setupDefaultBoardPieces`);
     for (let i = 0; i < 8; i++) {
         pawnCreator(PieceColor.White, new Coordinate(i, 1));
     }
     rookCreator(PieceColor.White, new Coordinate(0,0)); 
     rookCreator(PieceColor.White, new Coordinate(7,0)); 
-    knightCreator(PieceColor.White, new Coordinate(1,0));
-    knightCreator(PieceColor.White, new Coordinate(6,0));
-    bishopCreator(PieceColor.White, new Coordinate(2,0));
-    bishopCreator(PieceColor.White, new Coordinate(5,0));
+    // knightCreator(PieceColor.White, new Coordinate(1,0));
+    // knightCreator(PieceColor.White, new Coordinate(6,0));
+    // bishopCreator(PieceColor.White, new Coordinate(2,0));
+    // bishopCreator(PieceColor.White, new Coordinate(5,0));
     kingCreator(PieceColor.White, new Coordinate(4,0));
     queenCreator(PieceColor.White, new Coordinate(3,0));
 
@@ -490,7 +485,6 @@ function queenCreator(color : PieceColor, currentPosition : Coordinate) {
 }
 
 function drawBoard() {    
-    console.log(`drawBoard`);
     for (let row = 0; row < 8; row++) {
         for (let col = 0; col < 8; col++) {
             let logicalCell = Board[col][row];
@@ -563,9 +557,7 @@ function movePieceByText(textInput : string) {
 
     let piece = Board[firstCoordinate.X][firstCoordinate.Y];
 
-    console.log(piece);
     if (piece !== undefined) {
-        console.log(`firstCoordinate : ${firstCoordinate.X},${firstCoordinate.Y} --> secondCoordinate : ${secondCoordinate.X},${secondCoordinate.Y}`);
         updatePieceJustMoved(turn);
 
         if (piece.Name === "Pawn" && piece.HasBeenMoved === false) {
@@ -589,6 +581,75 @@ function movePieceByText(textInput : string) {
         }
 
     }
+}
+
+
+function movePiece(piece : Piece, destination : Coordinate, shouldChangeTurn : boolean) {
+    // Castling
+    updatePieceJustMoved(turn);
+
+    if (piece.Name === "King") {
+        let xDifference = piece.CurrentPosition.X - destination.X;
+        if (Math.abs(xDifference) > 1) {
+            // Castle LEFT
+            if (xDifference > 0) {
+                for (let i = 3; i >= 2; i--) {
+                    if (moveIsIllegal(piece, new Coordinate(i, piece.CurrentPosition.Y))) {
+                        return
+                    }
+                }
+                destination.X = 2;
+                movePiece(Board[0][piece.CurrentPosition.Y]!, new Coordinate(3, piece.CurrentPosition.Y), false);
+            } else { // Castle RIGHT
+                for (let i = 5; i <= 6; i++) {
+                    if (moveIsIllegal(piece, new Coordinate(i, piece.CurrentPosition.Y))) {
+                        return
+                    }
+                }
+                destination.X = 6;
+                movePiece(Board[7][piece.CurrentPosition.Y]!, new Coordinate(5, piece.CurrentPosition.Y), false);
+            }
+        }
+    }
+
+    // destroy piece enpassant
+    if (piece.Name === "Pawn") {
+        if (piece.HasBeenMoved === false) {
+            piece.JustMadeFirstMove = true;
+        }
+        if (Board[destination.X][destination.Y] === undefined) {
+            let behindDestination = piece.Color === PieceColor.White ? destination.Y - 1 : destination.Y + 1;
+            if (Board[destination.X][behindDestination] !== undefined && 
+                Board[destination.X][behindDestination]?.Name === "Pawn" && 
+                Board[destination.X][behindDestination]?.Color !== piece.Color) {
+                destroyPiece(new Coordinate(destination.X, behindDestination));
+            }
+        }
+    }
+
+    let formerCoordinates = piece.CurrentPosition;
+    removeVisualCell(formerCoordinates);
+    destroyPiece(destination);
+    updatePiecePosition(piece, destination);
+    drawVisualCell(piece);
+    Board[formerCoordinates.X][formerCoordinates.Y] = undefined;
+    updateAllLegalMovesAndFindChecks();
+    if (shouldChangeTurn) changeTurn();
+    piece.HasBeenMoved = true;
+
+    if (blackKingIsChecked || whiteKingIsChecked) {
+        checkAudio.play();
+    } else {
+        moveAudio.play();
+    }
+
+
+    let data : MoveData = <MoveData>{};
+    data.coordinate = translateCoordinateToText(formerCoordinates, destination);
+    data.turn = turn;
+    socket.emit('move', data);
+
+
 }
 
 function translateTextToCoordinate(textCoordinate : string) {
@@ -635,76 +696,6 @@ function translateCoordinateToText(start : Coordinate, end : Coordinate) {
     text += end.Y+1;
 
     return text;
-}
-
-
-
-function movePiece(piece : Piece, destination : Coordinate) {
-    // Castling
-    updatePieceJustMoved(turn);
-
-    if (piece.Name === "King") {
-        let xDifference = piece.CurrentPosition.X - destination.X;
-        if (Math.abs(xDifference) > 1) {
-            // Castle LEFT
-            if (xDifference > 0) {
-                for (let i = 3; i >= 2; i--) {
-                    if (moveIsIllegal(piece, new Coordinate(i, piece.CurrentPosition.Y))) {
-                        return
-                    }
-                }
-                destination.X = 2;
-                movePiece(Board[0][piece.CurrentPosition.Y]!, new Coordinate(3, piece.CurrentPosition.Y));
-            } else { // Castle RIGHT
-                for (let i = 5; i <= 6; i++) {
-                    if (moveIsIllegal(piece, new Coordinate(i, piece.CurrentPosition.Y))) {
-                        return
-                    }
-                }
-                destination.X = 6;
-                movePiece(Board[7][piece.CurrentPosition.Y]!, new Coordinate(5, piece.CurrentPosition.Y));
-            }
-        }
-    }
-
-    // destroy piece enpassant
-    if (piece.Name === "Pawn") {
-        if (piece.HasBeenMoved === false) {
-            piece.JustMadeFirstMove = true;
-        }
-        if (Board[destination.X][destination.Y] === undefined) {
-            let behindDestination = piece.Color === PieceColor.White ? destination.Y - 1 : destination.Y + 1;
-            if (Board[destination.X][behindDestination] !== undefined && 
-                Board[destination.X][behindDestination]?.Name === "Pawn" && 
-                Board[destination.X][behindDestination]?.Color !== piece.Color) {
-                destroyPiece(new Coordinate(destination.X, behindDestination));
-            }
-        }
-    }
-
-    let formerCoordinates = piece.CurrentPosition;
-    removeVisualCell(formerCoordinates);
-    destroyPiece(destination);
-    updatePiecePosition(piece, destination);
-    drawVisualCell(piece);
-    Board[formerCoordinates.X][formerCoordinates.Y] = undefined;
-    updateAllLegalMovesAndFindChecks();
-    changeTurn();
-    piece.HasBeenMoved = true;
-
-    if (blackKingIsChecked || whiteKingIsChecked) {
-        checkAudio.play();
-    } else {
-        moveAudio.play();
-    }
-
-
-    let data : MoveData = <MoveData>{};
-    data.coordinate = translateCoordinateToText(formerCoordinates, destination);
-    data.turn = turn;
-    socket.emit('move', data);
-
-
 }
 
 function changeTurn() {
@@ -802,6 +793,7 @@ function makePieceDraggable() {
 //     // });
 
     document.addEventListener("dragend", (e : any) => {
+        if (!isPlayer) return;
         let colIndex = parseInt(e.path[1].id.replace("col-", "")) - 1;
         let rowIndex = parseInt(e.path[1].getAttribute("row")!) - 1;
 
@@ -831,7 +823,7 @@ function makeCellsLandable() {
             let dropCoordinate : Coordinate = getCoordinateFromElement(target)
 
             if (moveIsIllegal(lastTouchedPiece, dropCoordinate) === false) {
-                movePiece(lastTouchedPiece, dropCoordinate);
+                movePiece(lastTouchedPiece, dropCoordinate, true);
                 drawBoard();
             }
 
