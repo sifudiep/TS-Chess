@@ -29,7 +29,7 @@ io.on('connection', (socket) => {
         moveArray = [];
         turn = PieceColor.White;
         io.emit("redraw-board");
-    }) 
+    })
 
     socket.on("move", (move) => {
         turn = move.turn;
@@ -40,13 +40,18 @@ io.on('connection', (socket) => {
     socket.emit("get-board", { moveArray, turn });
 
     if (io.engine.clientsCount <= 2) {
+        console.log(`clientcount : ${io.engine.clientsCount}`);
         let pieceColor;
         if (socket.id === players[0]) {
             pieceColor = PieceColor.White;
         } else if (socket.id === players[1]) {
             pieceColor = PieceColor.Black;
+        } else {
+            pieceColor = PieceColor.None;
         }
-        socket.emit("success-connect", pieceColor);
+        socket.emit("player-connect", pieceColor);
+    } else {
+        socket.emit("spectator-connect")
     }
 
     socket.on('disconnect', () => {

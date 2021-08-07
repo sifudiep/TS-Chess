@@ -32,37 +32,40 @@ let blackKingIsChecked : boolean = false;
 initGame();
 
 function setBoardPerspective() {
-    console.log(`playerColor : ${playerColor}`);
+    console.log(`setting board perspective`);
     if (playerColor === PieceColor.White) {
         document.getElementById("black-perspective")?.remove();
     } else if (playerColor === PieceColor.Black) {
         document.getElementById("white-perspective")?.remove();
-    } else {
+    } else if (playerColor === PieceColor.None) {
         document.getElementById("black-perspective")?.remove();
     }
-
-    setupBoardColors();
-    setupDefaultBoardPieces();
     drawBoard();
 }
 
 function setupBoardColors() {
-    let board = document.getElementsByClassName('chessBoard')[0];
-    if (board == null) throw Error;
+    console.log(`setupBoardColors`);
+    let blackBoard = document.getElementsByClassName('chessBoard')[0];
+    let whiteBoard = document.getElementsByClassName('chessBoard')[1];
 
     let lightColor = true;
-    for (let i = 0; i < board.children.length; i++) {
-        let row = board.children[i];
-        for (let j = 0; j < row.children.length; j++) {
-            lightColor ? row.children[j].className += ' light-cell' : row.children[j].className += ' dark-cell';
-            lightColor ? lightColor = false : lightColor = true;
+    for (let i = 0; i < whiteBoard.children.length; i++) {
+        let whiteRow = whiteBoard.children[i];
+        let blackRow = blackBoard.children[i];
+        for (let j = 0; j < whiteRow.children.length; j++) {
+            lightColor ? whiteRow.children[j].className += ' light-cell' : whiteRow.children[j].className += ' dark-cell';
+            lightColor ? blackRow.children[j].className += ' light-cell' : blackRow.children[j].className += ' dark-cell';
+
+            lightColor = !lightColor;
         }
-        lightColor ? lightColor = false : lightColor = true;
+        lightColor = !lightColor;
     }
 } 
 
+
 function connectToGame() {
-    socket.on('success-connect', (data : any) => {
+    socket.on('player-connect', (data : any) => {
+        console.log(`success-connect, playerColor : ${playerColor}`);
         if (playerColor !== PieceColor.None) return
         if (data !== PieceColor.None) isPlayer = true;
         if (data == PieceColor.White) {
@@ -73,11 +76,18 @@ function connectToGame() {
             playerName = "Black";
             playerColor = PieceColor.Black;
         }
-        drawPlayerName();
         setBoardPerspective();
+        drawPlayerName();
     }) 
 
+    socket.on('spectator-connect', () => {
+        drawPlayerName();
+        setBoardPerspective();
+    })
+
     socket.on("get-board", (data : any) => {
+        console.log(`got board: `);
+        console.log(data.moveArray);
         drawBoardFromArray(data.moveArray, data.turn);
     })
 }
@@ -101,6 +111,7 @@ function drawPlayerName() {
 
 function setupDefaultBoardPieces() {
     // White pieces...
+    console.log(`setupDefaultBoardPieces`);
     for (let i = 0; i < 8; i++) {
         pawnCreator(PieceColor.White, new Coordinate(i, 1));
     }
@@ -128,6 +139,8 @@ function setupDefaultBoardPieces() {
 }
 
 function initGame() {    
+    setupBoardColors();
+    setupDefaultBoardPieces();
     makePieceDraggable();
     makeCellsLandable();
     updateAllLegalMovesAndFindChecks();
@@ -477,6 +490,7 @@ function queenCreator(color : PieceColor, currentPosition : Coordinate) {
 }
 
 function drawBoard() {    
+    console.log(`drawBoard`);
     for (let row = 0; row < 8; row++) {
         for (let col = 0; col < 8; col++) {
             let logicalCell = Board[col][row];
@@ -549,7 +563,9 @@ function movePieceByText(textInput : string) {
 
     let piece = Board[firstCoordinate.X][firstCoordinate.Y];
 
+    console.log(piece);
     if (piece !== undefined) {
+        console.log(`firstCoordinate : ${firstCoordinate.X},${firstCoordinate.Y} --> secondCoordinate : ${secondCoordinate.X},${secondCoordinate.Y}`);
         updatePieceJustMoved(turn);
 
         if (piece.Name === "Pawn" && piece.HasBeenMoved === false) {
