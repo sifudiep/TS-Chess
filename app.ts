@@ -3,10 +3,12 @@ import { Coordinate } from "./classes/Coordinate.js";
 import { MoveData } from "./interface/MoveData.js";
 import { PieceColor } from "./enum/PieceColor.js";
 
+// export server.js, init server!
+
 const io = require("socket.io-client");
 
-const socket = io("https://sifudiep-ts-chess.herokuapp.com/");
-// const socket = io("ws://localhost:3000")
+// const socket = io("https://sifudiep-ts-chess.herokuapp.com/");
+const socket = io("ws://localhost:3000")
 
 let moveAudio = new Audio('./sfx/move.wav');
 let checkAudio = new Audio('./sfx/check.wav');
@@ -29,8 +31,23 @@ let blackKingIsChecked : boolean = false;
 
 initGame();
 
+function setBoardPerspective() {
+    console.log(`playerColor : ${playerColor}`);
+    if (playerColor === PieceColor.White) {
+        document.getElementById("black-perspective")?.remove();
+    } else if (playerColor === PieceColor.Black) {
+        document.getElementById("white-perspective")?.remove();
+    } else {
+        document.getElementById("black-perspective")?.remove();
+    }
+
+    setupBoardColors();
+    setupDefaultBoardPieces();
+    drawBoard();
+}
+
 function setupBoardColors() {
-    let board = document.getElementById('chessBoard');
+    let board = document.getElementsByClassName('chessBoard')[0];
     if (board == null) throw Error;
 
     let lightColor = true;
@@ -57,14 +74,15 @@ function connectToGame() {
             playerColor = PieceColor.Black;
         }
         drawPlayerName();
+        setBoardPerspective();
     }) 
 
     socket.on("get-board", (data : any) => {
-        DrawBoardFromArray(data.moveArray, data.turn);
+        drawBoardFromArray(data.moveArray, data.turn);
     })
 }
 
-function DrawBoardFromArray(moveArray : string[], playerTurn : PieceColor) {
+function drawBoardFromArray(moveArray : string[], playerTurn : PieceColor) {
     for (let i = 0; i < moveArray.length; i++) {
         movePieceByText(moveArray[i]); 
     }
@@ -109,10 +127,7 @@ function setupDefaultBoardPieces() {
     queenCreator(PieceColor.Black, new Coordinate(3,7));
 }
 
-function initGame() {
-    setupBoardColors();
-    setupDefaultBoardPieces();
-    drawBoard();
+function initGame() {    
     makePieceDraggable();
     makeCellsLandable();
     updateAllLegalMovesAndFindChecks();
@@ -466,11 +481,9 @@ function drawBoard() {
         for (let col = 0; col < 8; col++) {
             let logicalCell = Board[col][row];
             if (logicalCell !== undefined) {
-                const rowElement = document.getElementById(`row-${row+1}`);
-                if (rowElement == null) throw Error;
-                let visualCell = rowElement.children[col];
+                let visualCell = getVisualCell(new Coordinate(col, row));
                 
-                if (visualCell.children.length === 0) {
+                if (visualCell?.children.length === 0) {
                     drawVisualCell(logicalCell);
                 }
             }
@@ -484,15 +497,21 @@ function getLogicalCell(coordinate : Coordinate) {
 
 function getVisualCell(coordinate : Coordinate) {
     const rowElement = document.getElementById(`row-${coordinate.Y+1}`);
-    if (rowElement != null)
-        return rowElement.children[coordinate.X];
+    if (rowElement != null) {
+        for (let i = 0; i < rowElement.children.length; i++) {
+            if (parseInt(rowElement.children[i].id[4]) === coordinate.X+1) {
+                return rowElement.children[i];
+            }
+        }
+    }
+    // HERE IS THE BUG, dont use [], find the child with id:col-$
     else 
         throw Error;
 }
 
 function removeVisualCell(cellCoordinate : Coordinate) {
     let visualCell = getVisualCell(cellCoordinate);
-    if (visualCell.firstElementChild != null) {
+    if (visualCell?.firstElementChild != null) {
         visualCell.removeChild(visualCell.firstElementChild);
     }
 }
@@ -509,7 +528,7 @@ function drawVisualCell(piece : Piece) {
 
     if (logicalCell == undefined) throw Error;
 
-    while (visualCell.firstElementChild != null) 
+    while (visualCell?.firstElementChild != null) 
         visualCell.removeChild(visualCell.firstElementChild);
 
     let visualCellImgBackground = document.createElement("div");
@@ -521,7 +540,7 @@ function drawVisualCell(piece : Piece) {
     visualCellImgBackground.setAttribute("class"," piece-background")
     visualCellImgBackground.setAttribute("draggable", "true")
 
-    visualCell.appendChild(visualCellImgBackground);    
+    visualCell?.appendChild(visualCellImgBackground);    
 }
 
 function movePieceByText(textInput : string) {
@@ -712,14 +731,14 @@ function updateLegalMoves(piece : Piece) {
 function highlightLegalMoves(piece : Piece) {
     for (let i = 0; i < piece.LegalMoves.length; i++) {
         let visualCell = getVisualCell(piece.LegalMoves[i]);
-        visualCell.className += " legalMove";
+        visualCell!.className += " legalMove";
     }
 }
 
 function unhighlightLegalMoves(piece : Piece) {
     for (let i = 0; i < piece.LegalMoves.length; i++) {
         let visualCell = getVisualCell(piece.LegalMoves[i]);
-        visualCell.className = visualCell.className.replace(" legalMove", "");
+        visualCell!.className = visualCell!.className.replace(" legalMove", "");
     }
 }
 
@@ -831,8 +850,6 @@ function eraseChessHTMLElements() {
         }
     }
 }
-
-
 
 function getCoordinateFromElement(element : any) {
     let cellDiv : HTMLDivElement | HTMLImageElement | any;

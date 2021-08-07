@@ -13,7 +13,7 @@ server.use('/pieces', express.static(__dirname + '/pieces'));
 server.use('/sfx', express.static(__dirname + '/sfx'))
 
 server.get('/', (req, res) => {
-    res.sendFile(__dirname + "/public/index.html");
+    res.sendFile(__dirname + "/public/chess.html");
 })
 
 const io = require('socket.io')(httpServer, {

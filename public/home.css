@@ -1,0 +1,40 @@
+html {
+    font-size: 10px;
+}
+
+body {
+    background-color: grey;
+}
+
+.container {
+    background-color: rgb(249, 254, 255);
+    width: 50rem;
+    height: 30rem;
+    border: .2rem solid black;
+    border-radius: 1rem;
+    margin: auto;
+    position: relative;
+    text-align: center;
+    margin-top: 10rem;
+}
+
+h3 {
+    font-size: 3rem;
+}
+
+.player-name-input {
+    width: 40rem;
+    height: 4rem;
+    font-size: 3rem;
+    text-align: center;
+}
+
+.create-lobby-button {
+    margin-top: 5rem;
+    width: 23rem;
+    height: 6rem;
+    background-color: rgb(56, 161, 56);
+    border-radius: .3rem;
+    font-size: 2rem;
+}
+

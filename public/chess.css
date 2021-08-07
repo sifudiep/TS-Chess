@@ -4,7 +4,7 @@ body {
     background-color: #F9FEFF;
 }
 
-#chessBoard {
+.chessBoard {
     width: 40vw;
     height: 40vw;
     margin-left: 30vw;
