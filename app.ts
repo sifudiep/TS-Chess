@@ -19,6 +19,8 @@ let playerColor : PieceColor = PieceColor.None;
 let isPlayer : boolean = false;
 let playerName : string = "Spectator";
 
+let lobbyId = window.location.href.split("/").pop();
+
 
 let Board : Piece[][] | undefined[][] = [[],[],[],[],[],[],[],[]] 
 
@@ -30,6 +32,11 @@ let whiteKingIsChecked : boolean = false;
 let blackKingIsChecked : boolean = false;
 
 initGame();
+
+function emitGetLobbyId() {
+    console.log(`emitting lobby`);
+    socket.emit("lobby", lobbyId);
+}
 
 function setBoardPerspective() {
     if (playerColor === PieceColor.White) {
@@ -134,13 +141,14 @@ function setupDefaultBoardPieces() {
 }
 
 function initGame() {    
+    connectToGame();
+    emitGetLobbyId();
     setupBoardColors();
     setupDefaultBoardPieces();
     makePieceDraggable();
     makeCellsLandable();
     updateAllLegalMovesAndFindChecks();
     detectMultiplayerMove()
-    connectToGame();
     drawPlayerName();
     listenToResetBoard();
 }
@@ -647,9 +655,9 @@ function movePiece(piece : Piece, destination : Coordinate, shouldChangeTurn : b
     let data : MoveData = <MoveData>{};
     data.coordinate = translateCoordinateToText(formerCoordinates, destination);
     data.turn = turn;
+    data.lobbyId = lobbyId!;
     socket.emit('move', data);
-
-
+    
 }
 
 function translateTextToCoordinate(textCoordinate : string) {

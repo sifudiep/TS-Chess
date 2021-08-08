@@ -18,8 +18,9 @@ body {
     margin-top: 10rem;
 }
 
-h3 {
-    font-size: 3rem;
+h1 {
+    font-size: 5rem;
+    font-family: arial;
 }
 
 .player-name-input {
