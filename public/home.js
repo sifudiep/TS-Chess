@@ -1,5 +1,5 @@
-// const socket = io("https://sifudiep-ts-chess.herokuapp.com/");
-const socket = io("ws://localhost:3000")
+const socket = io("https://sifudiep-ts-chess.herokuapp.com/");
+// const socket = io("ws://localhost:3000")
 
 socket.on('redirect', (data) => {
     window.location.href += data

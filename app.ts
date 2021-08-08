@@ -7,8 +7,8 @@ import { PieceColor } from "./enum/PieceColor.js";
 
 const io = require("socket.io-client");
 
-// const socket = io("https://sifudiep-ts-chess.herokuapp.com/");
-const socket = io("ws://localhost:3000")
+const socket = io("https://sifudiep-ts-chess.herokuapp.com/");
+// const socket = io("ws://localhost:3000")
 
 let moveAudio = new Audio('./sfx/move.wav');
 let checkAudio = new Audio('./sfx/check.wav');
@@ -34,7 +34,6 @@ let blackKingIsChecked : boolean = false;
 initGame();
 
 function emitGetLobbyId() {
-    console.log(`emitting lobby`);
     socket.emit("lobby", lobbyId);
 }
 
@@ -119,10 +118,10 @@ function setupDefaultBoardPieces() {
     }
     rookCreator(PieceColor.White, new Coordinate(0,0)); 
     rookCreator(PieceColor.White, new Coordinate(7,0)); 
-    // knightCreator(PieceColor.White, new Coordinate(1,0));
-    // knightCreator(PieceColor.White, new Coordinate(6,0));
-    // bishopCreator(PieceColor.White, new Coordinate(2,0));
-    // bishopCreator(PieceColor.White, new Coordinate(5,0));
+    knightCreator(PieceColor.White, new Coordinate(1,0));
+    knightCreator(PieceColor.White, new Coordinate(6,0));
+    bishopCreator(PieceColor.White, new Coordinate(2,0));
+    bishopCreator(PieceColor.White, new Coordinate(5,0));
     kingCreator(PieceColor.White, new Coordinate(4,0));
     queenCreator(PieceColor.White, new Coordinate(3,0));
 
