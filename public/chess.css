@@ -11,6 +11,7 @@ body {
     margin-top: 1rem;
     display: grid;
     grid-template-rows: repeat(8, 80px);
+    display: none;
 }
 
 .row {

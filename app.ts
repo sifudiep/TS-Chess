@@ -45,6 +45,8 @@ function setBoardPerspective() {
     } else if (playerColor === PieceColor.None) {
         document.getElementById("black-perspective")?.remove();
     }
+
+    document.getElementsByClassName("chessBoard")[0].setAttribute("style", "display: ''")
     drawBoard();
 }
 
