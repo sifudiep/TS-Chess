@@ -149,7 +149,6 @@ function initGame() {
     updateAllLegalMovesAndFindChecks();
     detectMultiplayerMove()
     drawPlayerName();
-    listenToResetBoard();
 }
 
 function updatePieceJustMoved(color : PieceColor) {
@@ -837,23 +836,6 @@ function makeCellsLandable() {
             unhighlightLegalMoves(lastTouchedPiece);
         }
     })
-}
-
-function listenToResetBoard() {
-    document.querySelector("button")?.addEventListener("click", () => {
-        socket.emit("reset");
-    })
-
-    socket.on("redraw-board", () => {
-        resetBoard();
-    })
-}
-
-function resetBoard() {
-    eraseChessHTMLElements();
-    Board = [[],[],[],[],[],[],[],[]];
-    setupDefaultBoardPieces();
-    drawBoard();
 }
 
 function eraseChessHTMLElements() { 

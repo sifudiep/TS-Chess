@@ -74,13 +74,7 @@ io.on('connection', (socket) => {
         createLobby(lobbyId);
         socket.emit("redirect", lobbyId);
     })
-
-    socket.on("reset", () => {
-        socketRoomData[move.lobbyId].moveArray = [];
-        socketRoomData[move.lobbyId].turn = PieceColor.White;
-        io.emit("redraw-board");
-    })
-
+    
     socket.on("move", (move) => {
         socketRoomData[move.lobbyId].turn = move.turn;
         socketRoomData[move.lobbyId].moveArray.push(move.coordinate)
