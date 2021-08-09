@@ -36,6 +36,7 @@ let socketRoomData = {
 }
 
 function createLobby(id) {
+    console.log(`creating room with id : ${id}`);
     socketRoomData[id] = {
         moveArray : [],
         turn : PieceColor.White,

@@ -21,7 +21,6 @@ let playerName : string = "Spectator";
 
 let lobbyId = window.location.href.split("/").pop();
 
-
 let Board : Piece[][] | undefined[][] = [[],[],[],[],[],[],[],[]] 
 
 let lastTouchedPiece : Piece;
@@ -46,7 +45,7 @@ function setBoardPerspective() {
         document.getElementById("black-perspective")?.remove();
     }
 
-    document.getElementsByClassName("chessBoard")[0].setAttribute("style", "display: ''")
+    document.getElementsByClassName("chessBoard")[0].setAttribute("style", "display: grid")
     drawBoard();
 }
 
