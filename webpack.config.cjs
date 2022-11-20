@@ -16,5 +16,5 @@ module.exports = {
         path: path.resolve(__dirname, "public"),
         filename: "main.js"
     },
-    mode: "development"
+    mode: "production"
 }
