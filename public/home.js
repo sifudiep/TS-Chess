@@ -1,4 +1,4 @@
-const socket = io("https://sifudiep-ts-chess.herokuapp.com/");
+const socket = io("https://ts-chess.onrender.com/");
 // const socket = io("ws://localhost:3000")
 
 socket.on('redirect', (data) => {
