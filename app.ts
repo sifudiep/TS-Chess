@@ -8,7 +8,7 @@ import { PieceColor } from "./enum/PieceColor.js";
 const io = require("socket.io-client");
 
 const socket = io("https://ts-chess.onrender.com/");
-// const socket = io("ws://localhost:3000")
+// const socket = io("ws://localhost:5000")
 
 let moveAudio = new Audio('./sfx/move.wav');
 let checkAudio = new Audio('./sfx/check.wav');

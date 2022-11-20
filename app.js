@@ -3,8 +3,8 @@ import { Coordinate } from "./classes/Coordinate.js";
 import { PieceColor } from "./enum/PieceColor.js";
 // export server.js, init server!
 var io = require("socket.io-client");
-var socket = io("https://ts-chess.onrender.com/");
-// const socket = io("ws://localhost:3000")
+// const socket = io("https://ts-chess.onrender.com/");
+var socket = io("ws://localhost:5000");
 var moveAudio = new Audio('./sfx/move.wav');
 var checkAudio = new Audio('./sfx/check.wav');
 var errorAudio = new Audio('./sfx/error.wav');

@@ -1,80 +1,107 @@
-import express from "express";
-var server = express();
-import http from "http";
-var httpServer = http.createServer(server);
+import express from "express"
+const server = express();
+import http from "http"
+const httpServer = http.createServer(server);
+import {Request, Response} from "express"
+import { Coordinate } from "./classes/Coordinate.js";
 import { PieceColor } from "./enum/PieceColor.js";
+
 import path from 'path';
-import { fileURLToPath } from 'url';
-var __filename = fileURLToPath(import.meta.url);
-var __dirname = path.dirname(__filename);
-var port = process.env.PORT || 5000;
-function generateID() {
-    var s4 = function () {
+import {fileURLToPath} from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const port = process.env.PORT || 5000;
+function generateID() : string {
+    let s4 = () => {
         return Math.floor((1 + Math.random()) * 0x10000)
             .toString(16)
             .substring(1);
-    };
+    }
     //return id of format "aaaaaaaa"
-    return s4() + s4();
+    return s4() + s4()
 }
+
 server.use('/public', express.static(__dirname + '/public'));
 server.use('/pieces', express.static(__dirname + '/pieces'));
-server.use('/sfx', express.static(__dirname + '/sfx'));
-server.get('/', function (req, res) {
+server.use('/sfx', express.static(__dirname + '/sfx'))
+
+server.get('/', (req : Request, res : Response) => {
     res.sendFile(__dirname + "/public/home.html");
-});
-import { Server } from "socket.io";
-var io = new Server(httpServer, {
-    cors: { origin: '*' }
-});
-var socketRoomData = {};
-function createLobby(id) {
-    console.log("creating room with id : ".concat(id));
-    socketRoomData[id] = {
-        moveArray: [],
-        turn: PieceColor.White,
-        players: []
-    };
-    server.get("/".concat(id), function (req, res) {
-        res.sendFile(__dirname + "/public/chess.html");
-    });
+})
+
+import { Server, Socket } from "socket.io";
+
+const io = new Server(httpServer, {
+    cors: { origin: '*' }   
+})
+
+type socketRoomData = {
+    [id : string] : {
+        moveArray: Coordinate[];
+        turn : PieceColor;
+        players : any[];
+        whiteId? : string;
+        blackId? : string;
+    }
 }
-io.on('connection', function (socket) {
-    console.log("Got connection from ".concat(socket));
-    socket.on("lobby", function (lobbyId) {
+
+const socketRoomData : socketRoomData = {}
+
+function createLobby(id : string) {
+    console.log(`creating room with id : ${id}`);
+    socketRoomData[id] = {
+        moveArray : [],
+        turn : PieceColor.White,
+        players: []
+    }
+    server.get(`/${id}`, (req : Request, res : Response) => {
+        res.sendFile(__dirname + "/public/chess.html");
+    })
+}
+
+io.on('connection', (socket : Socket) => {
+    console.log(`Got connection from ${socket}`);
+    socket.on("lobby", (lobbyId : string | undefined) => {
         if (lobbyId == undefined) {
-            throw new Error("ERROR : lobbyId is undefined...");
+            throw new Error("ERROR : lobbyId is undefined...")
         }
+
         socketRoomData[lobbyId].players.push(socket.id);
         socket.join(lobbyId);
-        socket.emit("get-board", { moveArray: socketRoomData[lobbyId].moveArray, turn: socketRoomData[lobbyId].turn });
+        socket.emit("get-board", { moveArray : socketRoomData[lobbyId].moveArray, turn: socketRoomData[lobbyId].turn  });
+
         console.log(socketRoomData[lobbyId]);
         if (socketRoomData[lobbyId].players.length <= 2) {
-            var pieceColor = void 0;
+            let pieceColor;
             if (socket.id === socketRoomData[lobbyId].players[0]) {
                 pieceColor = PieceColor.White;
-            }
-            else if (socket.id === socketRoomData[lobbyId].players[1]) {
+            } else if (socket.id === socketRoomData[lobbyId].players[1]) {
                 pieceColor = PieceColor.Black;
             }
-            console.log("pieceColor : ".concat(pieceColor));
+            console.log(`pieceColor : ${pieceColor}`);
             socket.emit("player-connect", pieceColor);
+        } else {
+            socket.emit("spectator-connect")
         }
-        else {
-            socket.emit("spectator-connect");
-        }
-    });
-    socket.on("create-lobby", function () {
-        console.log("SOCKET ON CREATE-LOBBY");
-        var id = generateID();
+    })
+
+
+    socket.on("create-lobby", () => {
+        console.log(`SOCKET ON CREATE-LOBBY`);
+        const id = generateID();
         createLobby(id);
         socket.emit("redirect", id);
-    });
-    socket.on("move", function (move) {
+    })
+    
+    socket.on("move", (move) => {
         socketRoomData[move.lobbyId].turn = move.turn;
-        socketRoomData[move.lobbyId].moveArray.push(move.coordinate);
-        io.to(move.lobbyId).emit('move', move);
-    });
+        socketRoomData[move.lobbyId].moveArray.push(move.coordinate)
+        io.to(move.lobbyId).emit('move', move)
+    })
+
+
     // socket.on('disconnect', () => {
     //     if (socketRoomData[lobbyId] !== undefined) {
     //         removeSocketId(socket.id)
@@ -84,12 +111,14 @@ io.on('connection', function (socket) {
     //         }
     //     }
     // })
-});
+})
+
 // To solve reconnect use localStorage:
 // 1. createId for White & CreateId for Black and store in socketRoomData object
 // 2. Once a player connects to room and registers as White/Black, send the whiteId and blackId to each person and store on localStorage. 
 //      When user loads url, check if id matches with socketRoomData ids, 
 //      if it does not match then user is spectator. If match then he is black/white.
+
 // function removeSocketId(id) {
 //     let newArray = [];
 //     for (let i = 0; i < socketRoomData[lobbyId].players.length; i++) {
@@ -102,4 +131,8 @@ io.on('connection', function (socket) {
 //     }
 //     socketRoomData[lobbyId].players = newArray;
 // }
-httpServer.listen(port, function () { return console.log("listening port:".concat(port)); });
+
+
+
+httpServer.listen(port, () => console.log(`listening port:${port}`));
+
